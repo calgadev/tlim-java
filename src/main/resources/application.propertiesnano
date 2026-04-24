@@ -1,0 +1,11 @@
+# Database connection
+spring.datasource.url=jdbc:postgresql://localhost:5432/tlim
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+
+# Hibernate — auto-creates and updates tables based on your @Entity classes
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+# App port
+server.port=8080
