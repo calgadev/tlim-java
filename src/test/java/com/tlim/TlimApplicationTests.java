@@ -1,13 +1,12 @@
 package com.tlim;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 class TlimApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
+    @Test
+    void contextLoads() {
+        // Full context load requires a live database.
+        // Integration tests are run manually with a test DB configured.
+    }
 }

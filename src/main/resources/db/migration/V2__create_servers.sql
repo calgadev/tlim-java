@@ -1,0 +1,5 @@
+CREATE TABLE servers (
+    id         BIGSERIAL PRIMARY KEY,
+    name       VARCHAR(100) UNIQUE NOT NULL,
+    created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);

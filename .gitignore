@@ -1,6 +1,9 @@
 HELP.md
 target/
 .env
+.claude/
+CLAUDE.md
+spec.md
 *.env
 application-local.properties
 *.class
