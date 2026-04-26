@@ -182,13 +182,16 @@ Triggered via `POST /api/admin/scrape` (ADMIN role required). Scrape status is a
 
 ### Stage 2 — Java / Spring Boot / PostgreSQL *(current)*
 - [x] Project initialization and base configuration
-- [x] Server entity and database verification
-- [x] Item entity
-- [ ] Full domain model and Flyway migrations (V1–V11)
-- [ ] JWT authentication
-- [ ] REST API endpoints (all groups)
-- [ ] TibiaWiki scraper (items and creatures)
-- [ ] Swagger UI documentation
+- [x] Full domain model and Flyway migrations (V1–V11)
+- [x] JWT authentication (register, login, stateless Bearer token, security filter chain)
+- [x] Swagger UI with JWT bearer auth scheme
+- [x] Server CRUD API (`/api/servers`)
+- [x] Character CRUD API with user-scoped queries (`/api/characters`)
+- [x] Item CRUD API with category filter (`/api/items`)
+- [ ] Creatures API (`/api/creatures`)
+- [ ] Inventory API (`/api/inventory`)
+- [ ] Hunt Sessions API (`/api/hunt-sessions`)
+- [ ] Admin API + TibiaWiki scraper (`/api/admin`)
 - [ ] Deploy
 
 ### Stage 3 — React frontend *(planned)*
