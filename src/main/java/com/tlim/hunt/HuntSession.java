@@ -20,23 +20,32 @@ public class HuntSession {
     @Column(length = 255)
     private String location;
 
-    // Values: "OPEN" or "CLOSED"
-    @Column(nullable = false, length = 20)
-    private String status;
-
-    @Column(name = "started_at", nullable = false, updatable = false)
+    @Column(name = "started_at", nullable = false)
     private Instant startedAt;
 
-    @Column(name = "ended_at")
+    @Column(name = "ended_at", nullable = false)
     private Instant endedAt;
 
-    @PrePersist
-    private void prePersist() {
-        startedAt = Instant.now();
-        if (status == null) {
-            status = "OPEN";
-        }
-    }
+    @Column(nullable = false, length = 50)
+    private String duration;
+
+    @Column(name = "raw_xp", nullable = false)
+    private int rawXp;
+
+    @Column(name = "xp_with_bonus", nullable = false)
+    private int xpWithBonus;
+
+    @Column(name = "loot_total", nullable = false)
+    private int lootTotal;
+
+    @Column(nullable = false)
+    private int supplies;
+
+    @Column(nullable = false)
+    private int damage;
+
+    @Column(nullable = false)
+    private int healing;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -47,11 +56,30 @@ public class HuntSession {
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
     public Instant getStartedAt() { return startedAt; }
+    public void setStartedAt(Instant startedAt) { this.startedAt = startedAt; }
 
     public Instant getEndedAt() { return endedAt; }
     public void setEndedAt(Instant endedAt) { this.endedAt = endedAt; }
+
+    public String getDuration() { return duration; }
+    public void setDuration(String duration) { this.duration = duration; }
+
+    public int getRawXp() { return rawXp; }
+    public void setRawXp(int rawXp) { this.rawXp = rawXp; }
+
+    public int getXpWithBonus() { return xpWithBonus; }
+    public void setXpWithBonus(int xpWithBonus) { this.xpWithBonus = xpWithBonus; }
+
+    public int getLootTotal() { return lootTotal; }
+    public void setLootTotal(int lootTotal) { this.lootTotal = lootTotal; }
+
+    public int getSupplies() { return supplies; }
+    public void setSupplies(int supplies) { this.supplies = supplies; }
+
+    public int getDamage() { return damage; }
+    public void setDamage(int damage) { this.damage = damage; }
+
+    public int getHealing() { return healing; }
+    public void setHealing(int healing) { this.healing = healing; }
 }
