@@ -161,7 +161,6 @@ Triggered via `POST /api/admin/scrape` (ADMIN role required). Scrape status is a
 
 - React frontend (Stage 3)
 - Market price tracking — NPC buyer prices only, no player market data
-- Hunt Analyser text/JSON import — manual hunt session entry via API only
 - Email, OAuth, or any auth mechanism beyond username + password JWT
 - Role-based access control beyond USER / ADMIN
 - Tibia.com API integration
@@ -188,9 +187,10 @@ Triggered via `POST /api/admin/scrape` (ADMIN role required). Scrape status is a
 - [x] Server CRUD API (`/api/servers`)
 - [x] Character CRUD API with user-scoped queries (`/api/characters`)
 - [x] Item CRUD API with category filter (`/api/items`)
-- [ ] Creatures API (`/api/creatures`)
+- [x] Creature CRUD API with loot eager-loading (`/api/creatures`)
 - [ ] Inventory API (`/api/inventory`)
 - [ ] Hunt Sessions API (`/api/hunt-sessions`)
+- [ ] Hunt Analyser import — text and JSON formats (`/api/hunt-sessions/import`)
 - [ ] Admin API + TibiaWiki scraper (`/api/admin`)
 - [ ] Deploy
 
