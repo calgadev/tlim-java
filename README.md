@@ -188,7 +188,7 @@ Triggered via `POST /api/admin/scrape` (ADMIN role required). Scrape status is a
 - [x] Character CRUD API with user-scoped queries (`/api/characters`)
 - [x] Item CRUD API with category filter (`/api/items`)
 - [x] Creature CRUD API with loot eager-loading (`/api/creatures`)
-- [ ] Inventory API (`/api/inventory`)
+- [x] Inventory API (`/api/inventory`)
 - [ ] Hunt Sessions API (`/api/hunt-sessions`)
 - [ ] Hunt Analyser import — text and JSON formats (`/api/hunt-sessions/import`)
 - [ ] Admin API + TibiaWiki scraper (`/api/admin`)
