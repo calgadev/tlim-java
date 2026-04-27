@@ -1,5 +1,6 @@
 CREATE TABLE servers (
-    id         BIGSERIAL PRIMARY KEY,
+    id         BIGSERIAL   PRIMARY KEY,
     name       VARCHAR(100) UNIQUE NOT NULL,
-    created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    pvp_type   VARCHAR(30) NOT NULL DEFAULT 'OPTIONAL_PVP',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

@@ -9,6 +9,7 @@ CREATE TABLE items (
     is_quest_item         BOOLEAN     NOT NULL DEFAULT FALSE,
     is_imbuement_material BOOLEAN     NOT NULL DEFAULT FALSE,
     is_delivery_item      BOOLEAN     NOT NULL DEFAULT FALSE,
+    is_task_item          BOOLEAN     NOT NULL DEFAULT FALSE,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
