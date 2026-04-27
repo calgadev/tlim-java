@@ -113,6 +113,7 @@ Protected endpoints require a Bearer JWT token. Use `POST /api/auth/register` to
 | Creatures | `/api/creatures` |
 | Inventory | `/api/inventory` |
 | Hunt Sessions | `/api/hunt-sessions` |
+| Server Item Prices | `/api/servers/{serverId}/item-prices` |
 | Admin | `/api/admin` |
 
 ---
@@ -160,7 +161,6 @@ Triggered via `POST /api/admin/scrape` (ADMIN role required). Scrape status is a
 ## What is NOT in scope for Stage 2
 
 - React frontend (Stage 3)
-- Market price tracking — NPC buyer prices only, no player market data
 - Email, OAuth, or any auth mechanism beyond username + password JWT
 - Role-based access control beyond USER / ADMIN
 - Tibia.com API integration
@@ -191,6 +191,7 @@ Triggered via `POST /api/admin/scrape` (ADMIN role required). Scrape status is a
 - [x] Inventory API (`/api/inventory`)
 - [x] Hunt Sessions API (`/api/hunt-sessions`)
 - [ ] Hunt Analyser import — text and JSON formats (`/api/hunt-sessions/import`)
+- [x] Server Item Prices API — per-server market price upsert and list (`/api/servers/{serverId}/item-prices`)
 - [x] Admin API + TibiaWiki scraper (`/api/admin`)
 - [ ] Deploy
 
