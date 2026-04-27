@@ -4,6 +4,7 @@ target/
 .claude/
 CLAUDE.md
 spec.md
+Spec2.md
 *.env
 application-local.properties
 *.class

@@ -1,12 +1,10 @@
 package com.tlim.scraper;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.tlim.item.Item;
 import com.tlim.item.ItemRepository;
 import com.tlim.item.NpcBuyer;
 import com.tlim.item.NpcBuyerRepository;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -14,222 +12,260 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 @Component
 public class ItemScraper {
 
     private static final Logger log = LoggerFactory.getLogger(ItemScraper.class);
-    private static final String BASE_URL = "https://tibia.fandom.com";
-    private static final String CATEGORY_INDEX_URL = BASE_URL + "/wiki/Category:Item_Types";
 
-    private final WikiHttpClient wikiHttpClient;
+    private final WikiApiClient wikiApiClient;
     private final ItemRepository itemRepository;
     private final NpcBuyerRepository npcBuyerRepository;
     private final TransactionTemplate transactionTemplate;
 
-    public ItemScraper(WikiHttpClient wikiHttpClient, ItemRepository itemRepository,
+    public ItemScraper(WikiApiClient wikiApiClient, ItemRepository itemRepository,
                        NpcBuyerRepository npcBuyerRepository, TransactionTemplate transactionTemplate) {
-        this.wikiHttpClient = wikiHttpClient;
+        this.wikiApiClient = wikiApiClient;
         this.itemRepository = itemRepository;
         this.npcBuyerRepository = npcBuyerRepository;
         this.transactionTemplate = transactionTemplate;
     }
 
-    // Returns int[] { itemsScraped, itemsFailed }
     public int[] scrapeAll() {
         int scraped = 0;
         int failed = 0;
 
-        // Level 1: collect category page URLs
-        List<String> categoryUrls = collectCategoryUrls();
-        log.info("Found {} item categories", categoryUrls.size());
+        // Level 1: subcategories of Category:Item_Types
+        List<String> categories = fetchCategoryMembers("Category:Items", "subcat");
+        log.info("Found {} item categories", categories.size());
 
-        // Level 2: collect individual item page URLs from each category (with pagination)
-        Set<String> itemUrls = new LinkedHashSet<>();
-        for (String categoryUrl : categoryUrls) {
-            itemUrls.addAll(collectItemUrls(categoryUrl));
+        // Level 2: page titles within each category, deduplicated
+        LinkedHashSet<String> itemTitles = new LinkedHashSet<>();
+        for (String category : categories) {
+            itemTitles.addAll(fetchCategoryMembers(category, "page"));
         }
-        log.info("Found {} unique item pages to scrape", itemUrls.size());
+        log.info("Found {} unique item pages", itemTitles.size());
 
-        // Level 3: scrape and upsert each item page
-        for (String itemUrl : itemUrls) {
+        // Level 3: parse and upsert each item
+        for (String title : itemTitles) {
             try {
-                scrapeAndUpsertItem(itemUrl);
+                scrapeItem(title);
                 scraped++;
             } catch (Exception e) {
-                log.warn("Failed to scrape item page {}: {}", itemUrl, e.getMessage());
+                log.warn("Failed to scrape item '{}': {}", title, e.getMessage());
                 failed++;
             }
         }
 
-        log.info("Item scrape complete: {} scraped, {} failed", scraped, failed);
         return new int[]{scraped, failed};
     }
 
-    private List<String> collectCategoryUrls() {
-        List<String> urls = new ArrayList<>();
-        try {
-            Document doc = wikiHttpClient.fetch(CATEGORY_INDEX_URL);
-            for (Element link : doc.select(".category-page__member-link")) {
-                String resolved = safeUrl(link.attr("href"));
-                if (resolved != null) urls.add(resolved);
-            }
-        } catch (Exception e) {
-            log.warn("Failed to collect category URLs from index: {}", e.getMessage());
+    private void scrapeItem(String pageTitle) {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("action", "parse");
+        params.put("page", pageTitle);
+        params.put("prop", "wikitext");
+        JsonNode root = wikiApiClient.get(params);
+
+        String wikitext = root.path("parse").path("wikitext").asText("");
+
+        String infoboxBlock = extractBlock(wikitext, "{{Infobox Object");
+        if (infoboxBlock == null) {
+            log.debug("No Infobox Object found for page '{}'", pageTitle);
+            return;
         }
-        return urls;
-    }
 
-    private List<String> collectItemUrls(String categoryUrl) {
-        List<String> urls = new ArrayList<>();
-        String currentUrl = categoryUrl;
-        while (currentUrl != null) {
-            try {
-                Document doc = wikiHttpClient.fetch(currentUrl);
-                for (Element link : doc.select(".category-page__member-link")) {
-                    String resolved = safeUrl(link.attr("href"));
-                    if (resolved != null) urls.add(resolved);
-                }
-                Element nextLink = doc.selectFirst("a.category-page__pagination-next");
-                currentUrl = nextLink != null ? safeUrl(nextLink.attr("href")) : null;
-            } catch (Exception e) {
-                log.warn("Failed to collect item URLs from {}: {}", currentUrl, e.getMessage());
-                currentUrl = null;
-            }
-        }
-        return urls;
-    }
+        Map<String, String> fields = parseFields(infoboxBlock);
 
-    private void scrapeAndUpsertItem(String url) {
-        Document doc = wikiHttpClient.fetch(url);
+        String name = fields.getOrDefault("name", pageTitle).trim();
+        if (name.isEmpty()) name = pageTitle;
 
-        Element titleEl = doc.selectFirst("h1.page-header__title");
-        if (titleEl == null) throw new ScraperException("No page title found on: " + url);
-        String name = titleEl.text().trim();
-        if (name.isBlank()) throw new ScraperException("Blank page title on: " + url);
+        BigDecimal weight = parseWeight(fields.get("weight"));
 
-        Element infobox = doc.selectFirst(".infobox-wrapper");
-        if (infobox == null) infobox = doc.selectFirst("table.infobox");
+        String category = fields.containsKey("primarytype")
+                ? nullIfBlank(fields.get("primarytype"))
+                : nullIfBlank(fields.get("objectclass"));
 
-        String description = null;
-        BigDecimal weight = null;
-        String category = null;
-        String imageUrl = null;
-        boolean isQuestItem = false;
-        boolean isImbuementMaterial = false;
+        String description = nullIfBlank(fields.get("notes"));
 
-        if (infobox != null) {
-            Element img = infobox.selectFirst("img");
-            if (img != null) {
-                imageUrl = img.hasAttr("data-src") ? img.attr("data-src") : img.attr("src");
-                if (imageUrl != null && imageUrl.isBlank()) imageUrl = null;
-            }
+        String imageFilename = fields.containsKey("image")
+                ? nullIfBlank(fields.get("image"))
+                : nullIfBlank(fields.get("sprite"));
+        // Infobox Object has no image/sprite field — derive from item name (TibiaWiki convention)
+        String imageUrl = imageFilename != null
+                ? "https://tibia.fandom.com/wiki/Special:FilePath/" + imageFilename.replace(" ", "_")
+                : "https://tibia.fandom.com/wiki/Special:FilePath/" + name.replace(" ", "_") + ".gif";
 
-            for (Element row : infobox.select("tr")) {
-                Elements cells = row.select("td");
-                if (cells.size() < 2) continue;
-                String label = cells.get(0).text().trim();
-                String value = cells.get(1).text().trim();
+        String wikiUrl = "https://tibia.fandom.com/wiki/" + pageTitle.replace(" ", "_");
 
-                switch (label) {
-                    case "Notes", "Description" -> description = value.isEmpty() ? null : value;
-                    case "Weight" -> {
-                        try {
-                            weight = new BigDecimal(value.replace(" oz", "").replace(",", "").trim());
-                        } catch (NumberFormatException e) {
-                            log.warn("Could not parse weight '{}' on {}", value, url);
-                        }
-                    }
-                    case "Class" -> category = value.isEmpty() ? null : value;
-                    case "Quest Item" -> isQuestItem = "Yes".equalsIgnoreCase(value);
-                    case "Imbuing" -> isImbuementMaterial = "Yes".equalsIgnoreCase(value);
+        boolean isQuestItem = "yes".equalsIgnoreCase(fields.get("questitem"));
+        boolean isImbuementMaterial = "yes".equalsIgnoreCase(fields.get("imbuing"));
+
+        // Upsert item
+        Item item = itemRepository.findByName(name).orElse(new Item());
+        item.setName(name);
+        item.setWikiUrl(wikiUrl);
+        item.setDescription(description);
+        item.setImageUrl(imageUrl);
+        item.setWeight(weight);
+        item.setCategory(category);
+        item.setQuestItem(isQuestItem);
+        item.setImbuementMaterial(isImbuementMaterial);
+        item.setDeliveryItem(false);
+        item = itemRepository.save(item);
+
+        // Parse NPC buyers from wikitext before touching the database
+        List<ParsedBuyer> parsedBuyers = new ArrayList<>();
+        String npcBlock = extractBlock(wikitext, "{{NPC Buyers");
+        if (npcBlock != null) {
+            // NPC buyer keys are NPC names — parse without lowercasing the key
+            String npcInner = npcBlock.substring(2, npcBlock.length() - 2);
+            List<String> npcSegments = splitAtTopLevelPipe(npcInner);
+            for (int i = 1; i < npcSegments.size(); i++) {
+                String segment = npcSegments.get(i).trim();
+                int eq = segment.indexOf('=');
+                if (eq == -1) continue;
+                String npcName = segment.substring(0, eq).trim();
+                String priceStr = segment.substring(eq + 1).trim().replace(",", "");
+                if (npcName.isEmpty() || priceStr.isEmpty()) continue;
+                try {
+                    parsedBuyers.add(new ParsedBuyer(npcName, Integer.parseInt(priceStr)));
+                } catch (NumberFormatException e) {
+                    // skip entries with unparseable prices
                 }
             }
+        } else {
+            log.debug("No NPC Buyers block found for item '{}'", name);
         }
 
-        List<ParsedNpcBuyer> buyers = parseNpcBuyers(doc, url);
-
-        // Capture finals for lambda
-        final String fName = name;
-        final String fDescription = description;
-        final BigDecimal fWeight = weight;
-        final String fCategory = category;
-        final String fImageUrl = imageUrl;
-        final boolean fIsQuestItem = isQuestItem;
-        final boolean fIsImbuementMaterial = isImbuementMaterial;
-
-        // Delete-then-insert for NPC buyers must be atomic — use TransactionTemplate
+        // Replace NPC buyers atomically: if an insert fails mid-way, the delete is rolled back too
+        final Item savedItem = item;
         transactionTemplate.executeWithoutResult(status -> {
-            Item item = itemRepository.findByName(fName).orElseGet(Item::new);
-            item.setName(fName);
-            item.setWikiUrl(url);
-            item.setDescription(fDescription);
-            item.setWeight(fWeight);
-            item.setCategory(fCategory);
-            item.setImageUrl(fImageUrl);
-            item.setQuestItem(fIsQuestItem);
-            item.setImbuementMaterial(fIsImbuementMaterial);
-            item.setDeliveryItem(false);
-            Item saved = itemRepository.save(item);
-
-            npcBuyerRepository.deleteAllInBatch(npcBuyerRepository.findByItemId(saved.getId()));
-
-            for (ParsedNpcBuyer parsed : buyers) {
+            npcBuyerRepository.deleteAllByItemId(savedItem.getId());
+            for (ParsedBuyer parsed : parsedBuyers) {
                 NpcBuyer buyer = new NpcBuyer();
-                buyer.setItem(saved);
+                buyer.setItem(savedItem);
                 buyer.setNpcName(parsed.npcName());
-                buyer.setLocation(parsed.location());
+                buyer.setLocation(null);
                 buyer.setPrice(parsed.price());
                 npcBuyerRepository.save(buyer);
             }
         });
     }
 
-    private List<ParsedNpcBuyer> parseNpcBuyers(Document doc, String url) {
-        List<ParsedNpcBuyer> buyers = new ArrayList<>();
+    private record ParsedBuyer(String npcName, int price) {}
 
-        Element sellToEl = doc.getElementById("npc-trade-sellto");
-        if (sellToEl == null) {
-            log.debug("No NPC buyer section on: {}", url);
-            return buyers;
-        }
-
-        // The trade table follows the section anchor as a sibling element
-        Element table = sellToEl.nextElementSibling();
-        while (table != null && !table.tagName().equals("table")) {
-            table = table.nextElementSibling();
-        }
-        if (table == null) return buyers;
-
-        for (Element row : table.select("tr")) {
-            Elements cells = row.select("td");
-            if (cells.size() < 3) continue;
-            String npcName = cells.get(0).select("a").text().trim();
-            if (npcName.isBlank()) continue;
-            String location = cells.get(1).text().trim();
-            // Strip non-numeric characters other than minus sign before parsing
-            String priceText = cells.get(2).text().trim().replace(",", "").replaceAll("[^0-9\\-]", "").trim();
-            try {
-                int price = Integer.parseInt(priceText);
-                buyers.add(new ParsedNpcBuyer(npcName, location.isEmpty() ? null : location, price));
-            } catch (NumberFormatException e) {
-                log.warn("Could not parse NPC buyer price '{}' for '{}' on {}", priceText, npcName, url);
+    private List<String> fetchCategoryMembers(String cmtitle, String cmtype) {
+        List<String> titles = new ArrayList<>();
+        String continueToken = null;
+        do {
+            Map<String, String> params = new LinkedHashMap<>();
+            params.put("action", "query");
+            params.put("list", "categorymembers");
+            params.put("cmtitle", cmtitle);
+            params.put("cmtype", cmtype);
+            params.put("cmlimit", "500");
+            if (continueToken != null) {
+                params.put("cmcontinue", continueToken);
             }
-        }
-        return buyers;
+            JsonNode root = wikiApiClient.get(params);
+            for (JsonNode member : root.path("query").path("categorymembers")) {
+                titles.add(member.path("title").asText());
+            }
+            JsonNode next = root.path("continue").path("cmcontinue");
+            continueToken = (next.isMissingNode() || next.isNull()) ? null : next.asText();
+        } while (continueToken != null);
+        return titles;
     }
 
-    // Only accepts relative paths or absolute URLs already on tibia.fandom.com — prevents SSRF
-    private String safeUrl(String href) {
-        if (href == null || href.isBlank()) return null;
-        if (href.startsWith("/")) return BASE_URL + href;
-        if (href.startsWith(BASE_URL)) return href;
-        log.warn("Rejected potentially unsafe href: {}", href);
+    /**
+     * Finds a template block starting with blockStart, matching nested {{ }}.
+     */
+    private String extractBlock(String wikitext, String blockStart) {
+        int startIdx = wikitext.toLowerCase().indexOf(blockStart.toLowerCase());
+        if (startIdx == -1) return null;
+        return extractBlockFrom(wikitext, startIdx);
+    }
+
+    private String extractBlockFrom(String wikitext, int startIdx) {
+        int depth = 0;
+        int pos = startIdx;
+        while (pos < wikitext.length() - 1) {
+            if (wikitext.charAt(pos) == '{' && wikitext.charAt(pos + 1) == '{') {
+                depth++;
+                pos += 2;
+            } else if (wikitext.charAt(pos) == '}' && wikitext.charAt(pos + 1) == '}') {
+                depth--;
+                pos += 2;
+                if (depth == 0) return wikitext.substring(startIdx, pos);
+            } else {
+                pos++;
+            }
+        }
         return null;
     }
 
-    private record ParsedNpcBuyer(String npcName, String location, int price) {}
+    /**
+     * Splits a template block at top-level | characters and returns key=value pairs
+     * with keys lowercased (for case-insensitive infobox field lookup).
+     */
+    private Map<String, String> parseFields(String block) {
+        Map<String, String> fields = new LinkedHashMap<>();
+        // Strip outer {{ and }} so pipes inside the block are seen at depth 0
+        String inner = block.substring(2, block.length() - 2);
+        List<String> segments = splitAtTopLevelPipe(inner);
+        // First segment is the template name — skip it
+        for (int i = 1; i < segments.size(); i++) {
+            String segment = segments.get(i).trim();
+            int eq = segment.indexOf('=');
+            if (eq == -1) continue;
+            String key = segment.substring(0, eq).trim().toLowerCase();
+            String value = segment.substring(eq + 1).trim();
+            if (!key.isEmpty()) {
+                fields.put(key, value);
+            }
+        }
+        return fields;
+    }
+
+    private List<String> splitAtTopLevelPipe(String text) {
+        List<String> result = new ArrayList<>();
+        int depth = 0;
+        int start = 0;
+        for (int i = 0; i < text.length() - 1; i++) {
+            char c = text.charAt(i);
+            if (c == '{' && text.charAt(i + 1) == '{') {
+                depth++;
+                i++;
+            } else if (c == '}' && text.charAt(i + 1) == '}') {
+                depth--;
+                i++;
+            } else if (c == '|' && depth == 0) {
+                result.add(text.substring(start, i));
+                start = i + 1;
+            }
+        }
+        result.add(text.substring(start));
+        return result;
+    }
+
+    private BigDecimal parseWeight(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String cleaned = raw.replaceAll("[^0-9.]", "");
+        if (cleaned.isEmpty()) return null;
+        try {
+            return new BigDecimal(cleaned);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private String nullIfBlank(String value) {
+        if (value == null || value.isBlank()) return null;
+        return value.trim();
+    }
 }
