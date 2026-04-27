@@ -192,6 +192,7 @@ Triggered via `POST /api/admin/scrape` (ADMIN role required). Scrape status is a
 - [x] Hunt Sessions API (`/api/hunt-sessions`)
 - [ ] Hunt Analyser import — text and JSON formats (`/api/hunt-sessions/import`)
 - [x] Server Item Prices API — per-server market price upsert and list (`/api/servers/{serverId}/item-prices`)
+- [x] Sale Decision Engine — per-character sell recommendations (`GET /api/inventory/characters/{id}/decisions`)
 - [x] Admin API + TibiaWiki scraper (`/api/admin`)
 - [ ] Deploy
 
