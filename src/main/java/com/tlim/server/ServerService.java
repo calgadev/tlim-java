@@ -22,6 +22,7 @@ public class ServerService {
         }
         Server server = new Server();
         server.setName(request.name());
+        server.setPvpType(request.pvpType());
         return toResponse(serverRepository.save(server));
     }
 
@@ -38,6 +39,7 @@ public class ServerService {
     public ServerResponse updateServer(Long id, ServerRequest request) {
         Server server = findOrThrow(id);
         server.setName(request.name());
+        server.setPvpType(request.pvpType());
         return toResponse(serverRepository.save(server));
     }
 
@@ -52,6 +54,6 @@ public class ServerService {
     }
 
     private ServerResponse toResponse(Server server) {
-        return new ServerResponse(server.getId(), server.getName(), server.getCreatedAt());
+        return new ServerResponse(server.getId(), server.getName(), server.getPvpType(), server.getCreatedAt());
     }
 }

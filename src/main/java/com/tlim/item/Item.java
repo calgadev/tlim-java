@@ -42,6 +42,9 @@ public class Item {
     @Column(name = "is_delivery_item", nullable = false)
     private boolean isDeliveryItem;
 
+    @Column(name = "is_task_item", nullable = false)
+    private boolean isTaskItem;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -92,6 +95,9 @@ public class Item {
 
     public boolean isDeliveryItem() { return isDeliveryItem; }
     public void setDeliveryItem(boolean deliveryItem) { isDeliveryItem = deliveryItem; }
+
+    public boolean isTaskItem() { return isTaskItem; }
+    public void setTaskItem(boolean taskItem) { isTaskItem = taskItem; }
 
     public Instant getCreatedAt() { return createdAt; }
 

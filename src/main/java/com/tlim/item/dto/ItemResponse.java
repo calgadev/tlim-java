@@ -15,6 +15,7 @@ public record ItemResponse(
         boolean isQuestItem,
         boolean isImbuementMaterial,
         boolean isDeliveryItem,
+        boolean isTaskItem,
         List<NpcBuyerResponse> npcBuyers,
         Instant updatedAt
 ) {}

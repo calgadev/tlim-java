@@ -9,7 +9,7 @@ import java.time.Instant;
 @Entity
 @Table(
     name = "characters",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"name", "server_id"})
+    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "name"})
 )
 public class Character {
 
@@ -20,15 +20,17 @@ public class Character {
     @Column(nullable = false, length = 100)
     private String name;
 
-    // Many characters can belong to one user
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Many characters can belong to one server
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "server_id", nullable = false)
     private Server server;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 2)
+    private Vocation vocation;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -49,6 +51,9 @@ public class Character {
 
     public Server getServer() { return server; }
     public void setServer(Server server) { this.server = server; }
+
+    public Vocation getVocation() { return vocation; }
+    public void setVocation(Vocation vocation) { this.vocation = vocation; }
 
     public Instant getCreatedAt() { return createdAt; }
 }

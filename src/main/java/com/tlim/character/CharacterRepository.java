@@ -8,5 +8,5 @@ public interface CharacterRepository extends JpaRepository<Character, Long> {
 
     List<Character> findByUserId(Long userId);
 
-    boolean existsByNameAndServerId(String name, Long serverId);
+    boolean existsByUserIdAndName(Long userId, String name);
 }

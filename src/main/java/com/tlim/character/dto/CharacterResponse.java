@@ -1,5 +1,7 @@
 package com.tlim.character.dto;
 
+import com.tlim.character.Vocation;
+
 import java.time.Instant;
 
 public record CharacterResponse(
@@ -8,5 +10,6 @@ public record CharacterResponse(
         Long userId,
         Long serverId,
         String serverName,
+        Vocation vocation,
         Instant createdAt
 ) {}

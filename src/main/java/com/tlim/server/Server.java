@@ -15,6 +15,10 @@ public class Server {
     @Column(nullable = false, unique = true, length = 100)
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pvp_type", nullable = false, length = 30)
+    private PvpType pvpType;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -28,6 +32,9 @@ public class Server {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public PvpType getPvpType() { return pvpType; }
+    public void setPvpType(PvpType pvpType) { this.pvpType = pvpType; }
 
     public Instant getCreatedAt() { return createdAt; }
 }

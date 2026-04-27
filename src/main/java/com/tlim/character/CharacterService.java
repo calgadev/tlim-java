@@ -31,14 +31,15 @@ public class CharacterService {
         Server server = serverRepository.findById(request.serverId())
                 .orElseThrow(() -> new EntityNotFoundException("Server not found: " + request.serverId()));
 
-        if (characterRepository.existsByNameAndServerId(request.name(), request.serverId())) {
+        if (characterRepository.existsByUserIdAndName(userId, request.name())) {
             throw new IllegalArgumentException(
-                    "A character named '" + request.name() + "' already exists on that server");
+                    "You already have a character named '" + request.name() + "'");
         }
 
         Character character = new Character();
         character.setName(request.name());
         character.setServer(server);
+        character.setVocation(request.vocation());
         // Use a reference proxy to avoid an extra SELECT — user is already authenticated
         character.setUser(userRepository.getReferenceById(userId));
 
@@ -68,6 +69,7 @@ public class CharacterService {
 
         character.setName(request.name());
         character.setServer(server);
+        character.setVocation(request.vocation());
 
         return toResponse(characterRepository.save(character));
     }
@@ -86,6 +88,7 @@ public class CharacterService {
                 c.getUser().getId(),
                 c.getServer().getId(),
                 c.getServer().getName(),
+                c.getVocation(),
                 c.getCreatedAt()
         );
     }

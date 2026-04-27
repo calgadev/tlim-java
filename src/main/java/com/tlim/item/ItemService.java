@@ -88,6 +88,7 @@ public class ItemService {
                 item.isQuestItem(),
                 item.isImbuementMaterial(),
                 item.isDeliveryItem(),
+                item.isTaskItem(),
                 buyers,
                 item.getUpdatedAt()
         );
