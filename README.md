@@ -119,6 +119,50 @@ Protected endpoints require a Bearer JWT token. Use `POST /api/auth/register` to
 
 ---
 
+## Hunt Analyser import
+
+Two endpoints accept hunt session data exported from the in-game Hunt Analyser:
+
+| Endpoint | Format |
+|---|---|
+| `POST /api/hunt-sessions/import/text` | Raw text copied from the Hunt Analyser |
+| `POST /api/hunt-sessions/import/json` | JSON exported from the Hunt Analyser |
+
+**Required fields**
+
+| Field | Type | Description |
+|---|---|---|
+| `characterId` | Long | ID of the character who ran the hunt |
+| `rawData` | String | The full text or JSON content from the Hunt Analyser |
+
+**Optional fields**
+
+| Field | Type | Description |
+|---|---|---|
+| `name` | String | Session label. If omitted or blank, auto-generated as `Hunt dd/MM HH:mm` from the session start time |
+| `isParty` | Boolean | `true` if the hunt was run in a party. Defaults to `false` if omitted |
+| `notes` | String | Free-text notes for this session |
+| `charLevel` | Integer | Character level at the time of the hunt |
+| `allyEkLevel` | Integer | Level of the party's Elite Knight |
+| `allyMsLevel` | Integer | Level of the party's Master Sorcerer |
+| `allyEdLevel` | Integer | Level of the party's Elder Druid |
+| `allyRpLevel` | Integer | Level of the party's Royal Paladin |
+| `allyEmLevel` | Integer | Level of the party's Elder Mage |
+| `location` | String | Hunting spot description (free text) |
+
+**Response — skipped names**
+
+If the raw data contains item or creature names not found in the database, the import does not fail. Instead, the response includes:
+
+| Field | Type | Description |
+|---|---|---|
+| `skippedItems` | `List<String>` | Item names from the parsed data that had no match in the Items table. Empty list when all matched. |
+| `skippedMonsters` | `List<String>` | Creature names from the parsed data that had no match in the Creatures table. Empty list when all matched. |
+
+A 201 response with non-empty skip lists means the session was saved successfully — only the unrecognised entries were omitted. Run the TibiaWiki scraper (`POST /api/admin/scrape`) if items or creatures are missing.
+
+---
+
 ## Creating the first admin user
 
 There is no registration endpoint that creates admin users. The first admin must be inserted directly into the database with a BCrypt-hashed password:
