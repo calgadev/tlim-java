@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/hunt-sessions")
@@ -64,8 +65,9 @@ public class HuntSessionController {
     })
     @GetMapping("/characters/{characterId}")
     public List<HuntSessionResponse> getSessionsByCharacter(@PathVariable Long characterId,
+                                                            @RequestParam(required = false) String location,
                                                             @AuthenticationPrincipal User currentUser) {
-        return huntSessionService.getSessionsByCharacter(characterId, currentUser.getId());
+        return huntSessionService.getSessionsByCharacter(characterId, currentUser.getId(), Optional.ofNullable(location));
     }
 
     @Operation(summary = "Get a hunt session by ID")

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class HuntSessionService {
@@ -27,11 +28,18 @@ public class HuntSessionService {
         this.characterRepository = characterRepository;
     }
 
-    public List<HuntSessionResponse> getSessionsByCharacter(Long characterId, Long currentUserId) {
+    public List<HuntSessionResponse> getSessionsByCharacter(Long characterId, Long currentUserId, Optional<String> location) {
         var character = characterRepository.findById(characterId)
                 .orElseThrow(() -> new EntityNotFoundException("Character not found: " + characterId));
+        // Ownership check always runs before any repository call — location filter cannot bypass it
         if (!character.getUser().getId().equals(currentUserId)) {
             throw new AccessDeniedException("Access denied");
+        }
+        if (location.isPresent() && !location.get().isBlank()) {
+            return huntSessionRepository.findByCharacterIdAndLocationContainingIgnoreCase(characterId, location.get())
+                    .stream()
+                    .map(this::toResponse)
+                    .toList();
         }
         return huntSessionRepository.findByCharacterId(characterId)
                 .stream()

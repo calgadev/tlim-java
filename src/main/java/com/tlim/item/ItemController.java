@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/items")
@@ -34,14 +35,15 @@ public class ItemController {
         return itemService.createItem(request);
     }
 
-    @Operation(summary = "List all items, optionally filtered by category")
+    @Operation(summary = "List all items, optionally filtered by category or name")
     @ApiResponse(responseCode = "200", description = "Item list returned")
     @GetMapping
-    public List<ItemResponse> getItems(@RequestParam(required = false) String category) {
+    public List<ItemResponse> getItems(@RequestParam(required = false) String category,
+                                       @RequestParam(required = false) String name) {
         if (category != null && !category.isBlank()) {
             return itemService.getItemsByCategory(category);
         }
-        return itemService.getAllItems();
+        return itemService.getAllItems(Optional.ofNullable(name));
     }
 
     @Operation(summary = "Get an item by ID")

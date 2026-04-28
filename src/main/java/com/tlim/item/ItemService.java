@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -36,7 +37,10 @@ public class ItemService {
         return toResponse(itemRepository.save(item));
     }
 
-    public List<ItemResponse> getAllItems() {
+    public List<ItemResponse> getAllItems(Optional<String> name) {
+        if (name.isPresent() && !name.get().isBlank()) {
+            return itemRepository.findByNameContainingIgnoreCase(name.get()).stream().map(this::toResponse).toList();
+        }
         return itemRepository.findAll().stream().map(this::toResponse).toList();
     }
 
