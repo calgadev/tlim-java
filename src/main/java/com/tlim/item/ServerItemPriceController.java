@@ -23,7 +23,10 @@ public class ServerItemPriceController {
     }
 
     @Operation(summary = "List all item prices for a server")
-    @ApiResponse(responseCode = "200", description = "Price list returned")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Price list returned"),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
+    })
     @GetMapping
     public List<ServerItemPriceResponse> getPricesByServer(@PathVariable Long serverId) {
         return serverItemPriceService.getPricesByServer(serverId);
@@ -33,6 +36,7 @@ public class ServerItemPriceController {
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Price upserted"),
         @ApiResponse(responseCode = "400", description = "marketPrice is negative or required fields are missing"),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
         @ApiResponse(responseCode = "404", description = "Item not found")
     })
     @PutMapping("/{itemId}")

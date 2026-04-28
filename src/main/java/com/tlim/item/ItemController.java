@@ -27,7 +27,8 @@ public class ItemController {
     @Operation(summary = "Create a new item")
     @ApiResponses({
         @ApiResponse(responseCode = "201", description = "Item created"),
-        @ApiResponse(responseCode = "400", description = "Name is blank or already taken")
+        @ApiResponse(responseCode = "400", description = "Name is blank or already taken"),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -36,7 +37,10 @@ public class ItemController {
     }
 
     @Operation(summary = "List all items, optionally filtered by category or name")
-    @ApiResponse(responseCode = "200", description = "Item list returned")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Item list returned"),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
+    })
     @GetMapping
     public List<ItemResponse> getItems(@RequestParam(required = false) String category,
                                        @RequestParam(required = false) String name) {
@@ -49,6 +53,7 @@ public class ItemController {
     @Operation(summary = "Get an item by ID")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Item found"),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
         @ApiResponse(responseCode = "404", description = "Item not found")
     })
     @GetMapping("/{id}")
@@ -56,9 +61,11 @@ public class ItemController {
         return itemService.getItemById(id);
     }
 
-    @Operation(summary = "Update an item")
+    @Operation(summary = "Update an item's details")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Item updated"),
+        @ApiResponse(responseCode = "400", description = "Name is blank"),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
         @ApiResponse(responseCode = "404", description = "Item not found")
     })
     @PutMapping("/{id}")
@@ -69,6 +76,7 @@ public class ItemController {
     @Operation(summary = "Delete an item")
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Item deleted"),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
         @ApiResponse(responseCode = "404", description = "Item not found")
     })
     @DeleteMapping("/{id}")

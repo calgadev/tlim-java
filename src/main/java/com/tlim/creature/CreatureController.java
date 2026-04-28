@@ -59,6 +59,7 @@ public class CreatureController {
     @Operation(summary = "Update a creature")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Creature updated"),
+        @ApiResponse(responseCode = "400", description = "Validation error in request body"),
         @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
         @ApiResponse(responseCode = "404", description = "Creature not found")
     })
