@@ -17,8 +17,17 @@ public class HuntSession {
     @JoinColumn(name = "character_id", nullable = false)
     private Character character;
 
+    @Column(nullable = false, length = 255)
+    private String name;
+
     @Column(length = 255)
     private String location;
+
+    @Column(name = "is_party", nullable = false)
+    private boolean isParty;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
 
     @Column(name = "started_at", nullable = false)
     private Instant startedAt;
@@ -47,14 +56,41 @@ public class HuntSession {
     @Column(nullable = false)
     private int healing;
 
+    @Column(name = "char_level")
+    private Integer charLevel;
+
+    @Column(name = "ally_ek_level")
+    private Integer allyEkLevel;
+
+    @Column(name = "ally_ms_level")
+    private Integer allyMsLevel;
+
+    @Column(name = "ally_ed_level")
+    private Integer allyEdLevel;
+
+    @Column(name = "ally_rp_level")
+    private Integer allyRpLevel;
+
+    @Column(name = "ally_em_level")
+    private Integer allyEmLevel;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
     public Character getCharacter() { return character; }
     public void setCharacter(Character character) { this.character = character; }
 
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
+
+    public boolean isParty() { return isParty; }
+    public void setParty(boolean isParty) { this.isParty = isParty; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 
     public Instant getStartedAt() { return startedAt; }
     public void setStartedAt(Instant startedAt) { this.startedAt = startedAt; }
@@ -82,4 +118,22 @@ public class HuntSession {
 
     public int getHealing() { return healing; }
     public void setHealing(int healing) { this.healing = healing; }
+
+    public Integer getCharLevel() { return charLevel; }
+    public void setCharLevel(Integer charLevel) { this.charLevel = charLevel; }
+
+    public Integer getAllyEkLevel() { return allyEkLevel; }
+    public void setAllyEkLevel(Integer allyEkLevel) { this.allyEkLevel = allyEkLevel; }
+
+    public Integer getAllyMsLevel() { return allyMsLevel; }
+    public void setAllyMsLevel(Integer allyMsLevel) { this.allyMsLevel = allyMsLevel; }
+
+    public Integer getAllyEdLevel() { return allyEdLevel; }
+    public void setAllyEdLevel(Integer allyEdLevel) { this.allyEdLevel = allyEdLevel; }
+
+    public Integer getAllyRpLevel() { return allyRpLevel; }
+    public void setAllyRpLevel(Integer allyRpLevel) { this.allyRpLevel = allyRpLevel; }
+
+    public Integer getAllyEmLevel() { return allyEmLevel; }
+    public void setAllyEmLevel(Integer allyEmLevel) { this.allyEmLevel = allyEmLevel; }
 }

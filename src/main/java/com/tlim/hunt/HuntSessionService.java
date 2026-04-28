@@ -55,7 +55,7 @@ public class HuntSessionService {
         huntSessionRepository.delete(session);
     }
 
-    private HuntSessionResponse toResponse(HuntSession session) {
+    HuntSessionResponse toResponse(HuntSession session) {
         List<HuntSessionItemResponse> items = huntSessionItemRepository
                 .findByHuntSessionId(session.getId())
                 .stream()
@@ -79,7 +79,10 @@ public class HuntSessionService {
         return new HuntSessionResponse(
                 session.getId(),
                 session.getCharacter().getId(),
+                session.getName(),
                 session.getLocation(),
+                session.isParty(),
+                session.getNotes(),
                 session.getStartedAt(),
                 session.getEndedAt(),
                 session.getDuration(),
@@ -89,8 +92,16 @@ public class HuntSessionService {
                 session.getSupplies(),
                 session.getDamage(),
                 session.getHealing(),
+                session.getCharLevel(),
+                session.getAllyEkLevel(),
+                session.getAllyMsLevel(),
+                session.getAllyEdLevel(),
+                session.getAllyRpLevel(),
+                session.getAllyEmLevel(),
                 items,
-                monsters
+                monsters,
+                List.of(),
+                List.of()
         );
     }
 }

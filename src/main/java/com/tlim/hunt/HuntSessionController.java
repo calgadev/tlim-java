@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +19,40 @@ import java.util.List;
 public class HuntSessionController {
 
     private final HuntSessionService huntSessionService;
+    private final HuntImportService huntImportService;
 
-    public HuntSessionController(HuntSessionService huntSessionService) {
+    public HuntSessionController(HuntSessionService huntSessionService,
+                                 HuntImportService huntImportService) {
         this.huntSessionService = huntSessionService;
+        this.huntImportService = huntImportService;
+    }
+
+    // Import endpoints are declared before {id} routes to prevent Spring
+    // treating the literal path segment "import" as an ID value
+    @Operation(summary = "Import a hunt session from Hunt Analyser text format")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Session imported"),
+        @ApiResponse(responseCode = "400", description = "Missing or malformed fields in rawData"),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
+        @ApiResponse(responseCode = "404", description = "Character not found")
+    })
+    @PostMapping("/import/text")
+    @ResponseStatus(HttpStatus.CREATED)
+    public HuntSessionResponse importFromText(@RequestBody @Valid HuntImportRequest request) {
+        return huntImportService.importFromText(request);
+    }
+
+    @Operation(summary = "Import a hunt session from Hunt Analyser JSON format")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Session imported"),
+        @ApiResponse(responseCode = "400", description = "Missing or malformed fields in rawData"),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
+        @ApiResponse(responseCode = "404", description = "Character not found")
+    })
+    @PostMapping("/import/json")
+    @ResponseStatus(HttpStatus.CREATED)
+    public HuntSessionResponse importFromJson(@RequestBody @Valid HuntImportRequest request) {
+        return huntImportService.importFromJson(request);
     }
 
     @Operation(summary = "List all hunt sessions for a character")
