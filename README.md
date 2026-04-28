@@ -113,6 +113,7 @@ Protected endpoints require a Bearer JWT token. Use `POST /api/auth/register` to
 | Creatures | `/api/creatures` |
 | Inventory | `/api/inventory` |
 | Hunt Sessions | `/api/hunt-sessions` |
+| Hunt Analyser Import | `POST /api/hunt-sessions/import/text`, `POST /api/hunt-sessions/import/json` |
 | Server Item Prices | `/api/servers/{serverId}/item-prices` |
 | Admin | `/api/admin` |
 
@@ -145,8 +146,9 @@ The application is structured around feature-based packages (`com.tlim.<domain>`
 | `Creature` | Game creature with stats and resistances, populated by scraper |
 | `CreatureLoot` | Loot table entry linking creature to item with rarity and amount range |
 | `Inventory` | Per-character item tracking with current and target quantities |
-| `HuntSession` | Hunt record linked to a character, with status and loot entries |
+| `HuntSession` | Closed hunt record linked to a character, with analytics and loot entries |
 | `HuntSessionItem` | Individual loot entry within a hunt session |
+| `HuntSessionMonster` | Individual kill entry within a hunt session |
 
 ---
 
@@ -190,7 +192,7 @@ Triggered via `POST /api/admin/scrape` (ADMIN role required). Scrape status is a
 - [x] Creature CRUD API with loot eager-loading (`/api/creatures`)
 - [x] Inventory API (`/api/inventory`)
 - [x] Hunt Sessions API (`/api/hunt-sessions`)
-- [ ] Hunt Analyser import — text and JSON formats (`/api/hunt-sessions/import`)
+- [x] Hunt Analyser import — text and JSON formats (`/api/hunt-sessions/import`)
 - [x] Server Item Prices API — per-server market price upsert and list (`/api/servers/{serverId}/item-prices`)
 - [x] Sale Decision Engine — per-character sell recommendations (`GET /api/inventory/characters/{id}/decisions`)
 - [x] Admin API + TibiaWiki scraper (`/api/admin`)
