@@ -119,6 +119,16 @@ Protected endpoints require a Bearer JWT token. Use `POST /api/auth/register` to
 
 ---
 
+## Search and filter query params
+
+| Endpoint | Parameter | Behaviour |
+|---|---|---|
+| `GET /api/items` | `?name=rotworm` | Returns items whose name contains the value (case-insensitive). Absent or blank falls through to all items. |
+| `GET /api/items` | `?category=weapon` | Returns items in that category. Takes precedence over `?name=` when both are supplied. |
+| `GET /api/hunt-sessions/characters/{id}` | `?location=Drefia` | Returns sessions whose location contains the value (case-insensitive). Absent or blank returns all sessions for the character. Ownership enforcement is not affected. |
+
+---
+
 ## Hunt Analyser import
 
 Two endpoints accept hunt session data exported from the in-game Hunt Analyser:
@@ -240,6 +250,7 @@ Triggered via `POST /api/admin/scrape` (ADMIN role required). Scrape status is a
 - [x] Server Item Prices API — per-server market price upsert and list (`/api/servers/{serverId}/item-prices`)
 - [x] Sale Decision Engine — per-character sell recommendations (`GET /api/inventory/characters/{id}/decisions`)
 - [x] Admin API + TibiaWiki scraper (`/api/admin`)
+- [x] Search and filter query params — `?name=` on items, `?location=` on hunt sessions
 - [ ] Deploy
 
 ### Stage 3 — React frontend *(planned)*
