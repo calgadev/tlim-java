@@ -102,14 +102,14 @@ public class CreatureScraper {
         Integer hp = parseNullableInt(fields.get("hp"));
         Integer experience = parseNullableInt(fields.get("exp"));
 
-        Integer physicalResistance = parseResistance(fields.get("physical"));
-        Integer fireResistance     = parseResistance(fields.get("fire"));
-        Integer iceResistance      = parseResistance(fields.get("ice"));
-        Integer energyResistance   = parseResistance(fields.get("energy"));
-        Integer earthResistance    = parseResistance(fields.get("earth"));
-        Integer deathResistance    = parseResistance(fields.get("death"));
-        Integer holyResistance     = parseResistance(fields.get("holy"));
-        Integer drownResistance    = parseResistance(fields.get("drown"));
+        Integer physicalResistance = parseResistance(fields.get("physicaldmgmod"));
+        Integer fireResistance     = parseResistance(fields.get("firedmgmod"));
+        Integer iceResistance      = parseResistance(fields.get("icedmgmod"));
+        Integer energyResistance   = parseResistance(fields.get("energydmgmod"));
+        Integer earthResistance    = parseResistance(fields.get("earthdmgmod"));
+        Integer deathResistance    = parseResistance(fields.get("deathdmgmod"));
+        Integer holyResistance     = parseResistance(fields.get("holydmgmod"));
+        Integer drownResistance    = parseResistance(fields.get("drowndmgmod"));
 
         // Upsert creature
         Creature creature = creatureRepository.findByName(name).orElse(new Creature());
