@@ -1,0 +1,15 @@
+[Unit]
+Description=TLIM API
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=calga
+WorkingDirectory=/home/calga/tlim-java
+EnvironmentFile=/home/calga/tlim-java/.env.service
+ExecStart=/usr/lib/jvm/java-17-openjdk-amd64/bin/java -jar /home/calga/tlim-java/target/tlim-0.0.1-SNAPSHOT.jar
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

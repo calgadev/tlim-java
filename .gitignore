@@ -1,6 +1,7 @@
 HELP.md
 target/
 .env
+.env.service
 .claude/
 CLAUDE.md
 spec.md
