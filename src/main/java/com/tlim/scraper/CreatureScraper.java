@@ -204,15 +204,26 @@ public class CreatureScraper {
             if (idx == -1) break;
             String lootItemBlock = extractBlockFrom(lootBlock, idx);
             if (lootItemBlock == null) break;
-            // Strip outer {{ and }} to get "Loot Item|amount|name|rarity"
+            // Strip outer {{ and }} to get "Loot Item|...|..."
             String inner = lootItemBlock.substring(2, lootItemBlock.length() - 2);
             String[] parts = inner.split("\\|", -1);
-            // parts[0]="Loot Item", parts[1]=amount, parts[2]=name, parts[3]=rarity (optional)
+            // parts[0] = "Loot Item"
+            // With amount:    parts[1]=amount, parts[2]=name, parts[3]=rarity
+            // Without amount: parts[1]=name,   parts[2]=rarity
             if (parts.length >= 3) {
-                String amountStr = parts[1].trim();
-                String itemName = parts[2].trim();
-                String rarity = (parts.length >= 4 && !parts[3].trim().isEmpty())
-                        ? parts[3].trim() : null;
+                String candidate = parts[1].trim();
+                String amountStr;
+                String itemName;
+                String rarity;
+                if (candidate.matches("\\d+(-\\d+)?")) {
+                    amountStr = candidate;
+                    itemName = parts[2].trim();
+                    rarity = (parts.length >= 4 && !parts[3].trim().isEmpty()) ? parts[3].trim() : null;
+                } else {
+                    amountStr = null;
+                    itemName = candidate;
+                    rarity = !parts[2].trim().isEmpty() ? parts[2].trim() : null;
+                }
                 int[] range = parseAmountRange(amountStr);
                 entries.add(new LootEntry(itemName, rarity, range[0], range[1]));
             }
