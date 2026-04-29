@@ -14,6 +14,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 import java.util.StringJoiner;
 
 @Component
@@ -33,7 +34,7 @@ public class WikiApiClient {
         this.objectMapper = new ObjectMapper();
     }
 
-    public JsonNode get(Map<String, String> params) {
+    public Optional<JsonNode> get(Map<String, String> params) {
         StringJoiner queryString = new StringJoiner("&");
         for (Map.Entry<String, String> entry : params.entrySet()) {
             queryString.add(
@@ -70,12 +71,23 @@ public class WikiApiClient {
             throw new ScraperException("HTTP request interrupted for URL: " + url, e);
         }
 
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new ScraperException("Non-2xx response " + response.statusCode() + " for URL: " + url);
+        int status = response.statusCode();
+        if (status == 403 || status == 429) {
+            // Derive a human-readable label from params for audit logging
+            String pageRef = params.getOrDefault("page", params.getOrDefault("cmtitle", url));
+            if (status == 429) {
+                log.warn("HTTP {} for '{}' — consider increasing tlim.scraper.delay-ms", status, pageRef);
+            } else {
+                log.warn("HTTP {} for '{}'", status, pageRef);
+            }
+            return Optional.empty();
+        }
+        if (status < 200 || status >= 300) {
+            throw new ScraperException("Non-2xx response " + status + " for URL: " + url);
         }
 
         try {
-            return objectMapper.readTree(response.body());
+            return Optional.of(objectMapper.readTree(response.body()));
         } catch (IOException e) {
             throw new ScraperException("Failed to parse JSON response for URL: " + url, e);
         }

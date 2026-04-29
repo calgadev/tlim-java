@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class ItemScraper {
@@ -69,7 +70,12 @@ public class ItemScraper {
         params.put("action", "parse");
         params.put("page", pageTitle);
         params.put("prop", "wikitext");
-        JsonNode root = wikiApiClient.get(params);
+        Optional<JsonNode> result = wikiApiClient.get(params);
+        if (result.isEmpty()) {
+            log.warn("Skipping page '{}' due to HTTP error — will be missing from this run", pageTitle);
+            return;
+        }
+        JsonNode root = result.get();
 
         String wikitext = root.path("parse").path("wikitext").asText("");
 
@@ -172,7 +178,12 @@ public class ItemScraper {
             if (continueToken != null) {
                 params.put("cmcontinue", continueToken);
             }
-            JsonNode root = wikiApiClient.get(params);
+            Optional<JsonNode> result = wikiApiClient.get(params);
+            if (result.isEmpty()) {
+                log.warn("HTTP error fetching category members for '{}' — results may be incomplete", cmtitle);
+                break;
+            }
+            JsonNode root = result.get();
             for (JsonNode member : root.path("query").path("categorymembers")) {
                 titles.add(member.path("title").asText());
             }
