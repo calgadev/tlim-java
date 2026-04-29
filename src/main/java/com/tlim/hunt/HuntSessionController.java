@@ -35,12 +35,14 @@ public class HuntSessionController {
         @ApiResponse(responseCode = "201", description = "Session imported"),
         @ApiResponse(responseCode = "400", description = "Missing or malformed fields in rawData"),
         @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
+        @ApiResponse(responseCode = "403", description = "Character does not belong to the authenticated user"),
         @ApiResponse(responseCode = "404", description = "Character not found")
     })
     @PostMapping("/import/text")
     @ResponseStatus(HttpStatus.CREATED)
-    public HuntSessionResponse importFromText(@RequestBody @Valid HuntImportRequest request) {
-        return huntImportService.importFromText(request);
+    public HuntSessionResponse importFromText(@RequestBody @Valid HuntImportRequest request,
+                                              @AuthenticationPrincipal User currentUser) {
+        return huntImportService.importFromText(request, currentUser.getId());
     }
 
     @Operation(summary = "Import a hunt session from Hunt Analyser JSON format")
@@ -48,12 +50,14 @@ public class HuntSessionController {
         @ApiResponse(responseCode = "201", description = "Session imported"),
         @ApiResponse(responseCode = "400", description = "Missing or malformed fields in rawData"),
         @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
+        @ApiResponse(responseCode = "403", description = "Character does not belong to the authenticated user"),
         @ApiResponse(responseCode = "404", description = "Character not found")
     })
     @PostMapping("/import/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public HuntSessionResponse importFromJson(@RequestBody @Valid HuntImportRequest request) {
-        return huntImportService.importFromJson(request);
+    public HuntSessionResponse importFromJson(@RequestBody @Valid HuntImportRequest request,
+                                              @AuthenticationPrincipal User currentUser) {
+        return huntImportService.importFromJson(request, currentUser.getId());
     }
 
     @Operation(summary = "List all hunt sessions for a character")
@@ -77,8 +81,9 @@ public class HuntSessionController {
         @ApiResponse(responseCode = "404", description = "Session not found")
     })
     @GetMapping("/{id}")
-    public HuntSessionResponse getSessionById(@PathVariable Long id) {
-        return huntSessionService.getSessionById(id);
+    public HuntSessionResponse getSessionById(@PathVariable Long id,
+                                              @AuthenticationPrincipal User currentUser) {
+        return huntSessionService.getSessionById(id, currentUser.getId());
     }
 
     @Operation(summary = "Delete a hunt session by ID")

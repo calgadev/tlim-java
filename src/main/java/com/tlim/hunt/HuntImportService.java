@@ -10,6 +10,7 @@ import com.tlim.item.Item;
 import com.tlim.item.ItemRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
+import org.springframework.security.access.AccessDeniedException;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,20 +55,23 @@ public class HuntImportService {
     }
 
     @Transactional
-    public HuntSessionResponse importFromText(HuntImportRequest req) {
+    public HuntSessionResponse importFromText(HuntImportRequest req, Long currentUserId) {
         ParsedHunt parsed = textHuntParser.parse(req.rawData());
-        return persistParsedHunt(parsed, req);
+        return persistParsedHunt(parsed, req, currentUserId);
     }
 
     @Transactional
-    public HuntSessionResponse importFromJson(HuntImportRequest req) {
+    public HuntSessionResponse importFromJson(HuntImportRequest req, Long currentUserId) {
         ParsedHunt parsed = jsonHuntParser.parse(req.rawData());
-        return persistParsedHunt(parsed, req);
+        return persistParsedHunt(parsed, req, currentUserId);
     }
 
-    private HuntSessionResponse persistParsedHunt(ParsedHunt parsed, HuntImportRequest req) {
+    private HuntSessionResponse persistParsedHunt(ParsedHunt parsed, HuntImportRequest req, Long currentUserId) {
         Character character = characterRepository.findById(req.characterId())
                 .orElseThrow(() -> new EntityNotFoundException("Character not found: " + req.characterId()));
+        if (!character.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("Character does not belong to the authenticated user");
+        }
 
         HuntSession session = new HuntSession();
         session.setCharacter(character);

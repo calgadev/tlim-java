@@ -60,9 +60,14 @@ public class CharacterService {
         return toResponse(character);
     }
 
-    public CharacterResponse updateCharacter(Long id, CharacterRequest request) {
+    public CharacterResponse updateCharacter(Long id, CharacterRequest request, Long currentUserId) {
         Character character = characterRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Character not found: " + id));
+
+        // Treat another user's character as non-existent to prevent data leakage
+        if (!character.getUser().getId().equals(currentUserId)) {
+            throw new EntityNotFoundException("Character not found: " + id);
+        }
 
         Server server = serverRepository.findById(request.serverId())
                 .orElseThrow(() -> new EntityNotFoundException("Server not found: " + request.serverId()));
@@ -74,11 +79,14 @@ public class CharacterService {
         return toResponse(characterRepository.save(character));
     }
 
-    public void deleteCharacter(Long id) {
-        if (!characterRepository.existsById(id)) {
+    public void deleteCharacter(Long id, Long currentUserId) {
+        Character character = characterRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Character not found: " + id));
+        // Treat another user's character as non-existent to prevent data leakage
+        if (!character.getUser().getId().equals(currentUserId)) {
             throw new EntityNotFoundException("Character not found: " + id);
         }
-        characterRepository.deleteById(id);
+        characterRepository.delete(character);
     }
 
     private CharacterResponse toResponse(Character c) {

@@ -39,22 +39,28 @@ public class InventoryController {
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Inventory entry created or updated"),
         @ApiResponse(responseCode = "400", description = "Invalid request body"),
-        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
+        @ApiResponse(responseCode = "403", description = "Character does not belong to the authenticated user"),
+        @ApiResponse(responseCode = "404", description = "Character not found")
     })
     @PostMapping("/characters/{characterId}")
     public InventoryResponse upsertInventory(@PathVariable Long characterId,
-                                             @Valid @RequestBody InventoryRequest request) {
-        return inventoryService.upsertInventory(characterId, request);
+                                             @Valid @RequestBody InventoryRequest request,
+                                             @AuthenticationPrincipal User currentUser) {
+        return inventoryService.upsertInventory(characterId, request, currentUser.getId());
     }
 
     @Operation(summary = "List all inventory entries for a character")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Inventory list returned"),
-        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
+        @ApiResponse(responseCode = "403", description = "Character does not belong to the authenticated user"),
+        @ApiResponse(responseCode = "404", description = "Character not found")
     })
     @GetMapping("/characters/{characterId}")
-    public List<InventoryResponse> getInventoryByCharacter(@PathVariable Long characterId) {
-        return inventoryService.getInventoryByCharacter(characterId);
+    public List<InventoryResponse> getInventoryByCharacter(@PathVariable Long characterId,
+                                                           @AuthenticationPrincipal User currentUser) {
+        return inventoryService.getInventoryByCharacter(characterId, currentUser.getId());
     }
 
     @Operation(summary = "Compute sale decisions for all inventory items of a character")
@@ -83,8 +89,9 @@ public class InventoryController {
         @ApiResponse(responseCode = "404", description = "Inventory entry not found")
     })
     @GetMapping("/{id}")
-    public InventoryResponse getInventoryById(@PathVariable Long id) {
-        return inventoryService.getInventoryById(id);
+    public InventoryResponse getInventoryById(@PathVariable Long id,
+                                              @AuthenticationPrincipal User currentUser) {
+        return inventoryService.getInventoryById(id, currentUser.getId());
     }
 
     @Operation(summary = "Delete an inventory entry by ID")
@@ -95,7 +102,8 @@ public class InventoryController {
     })
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteInventoryEntry(@PathVariable Long id) {
-        inventoryService.deleteInventoryEntry(id);
+    public void deleteInventoryEntry(@PathVariable Long id,
+                                     @AuthenticationPrincipal User currentUser) {
+        inventoryService.deleteInventoryEntry(id, currentUser.getId());
     }
 }

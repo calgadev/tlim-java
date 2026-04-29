@@ -76,8 +76,9 @@ public class CharacterController {
     })
     @PutMapping("/{id}")
     public CharacterResponse updateCharacter(@PathVariable Long id,
-                                             @Valid @RequestBody CharacterRequest request) {
-        return characterService.updateCharacter(id, request);
+                                             @Valid @RequestBody CharacterRequest request,
+                                             @AuthenticationPrincipal User currentUser) {
+        return characterService.updateCharacter(id, request, currentUser.getId());
     }
 
     @Operation(summary = "Delete a character by ID")
@@ -88,7 +89,8 @@ public class CharacterController {
     })
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCharacter(@PathVariable Long id) {
-        characterService.deleteCharacter(id);
+    public void deleteCharacter(@PathVariable Long id,
+                                @AuthenticationPrincipal User currentUser) {
+        characterService.deleteCharacter(id, currentUser.getId());
     }
 }

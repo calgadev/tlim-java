@@ -47,10 +47,14 @@ public class HuntSessionService {
                 .toList();
     }
 
-    public HuntSessionResponse getSessionById(Long id) {
-        return huntSessionRepository.findById(id)
-                .map(this::toResponse)
+    public HuntSessionResponse getSessionById(Long id, Long currentUserId) {
+        HuntSession session = huntSessionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Hunt session not found: " + id));
+        // Treat another user's session as non-existent to prevent data leakage
+        if (!session.getCharacter().getUser().getId().equals(currentUserId)) {
+            throw new EntityNotFoundException("Hunt session not found: " + id);
+        }
+        return toResponse(session);
     }
 
     @Transactional

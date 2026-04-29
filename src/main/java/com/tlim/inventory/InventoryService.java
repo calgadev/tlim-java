@@ -7,6 +7,7 @@ import com.tlim.inventory.dto.InventoryResponse;
 import com.tlim.item.Item;
 import com.tlim.item.ItemRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,9 +29,12 @@ public class InventoryService {
     }
 
     @Transactional
-    public InventoryResponse upsertInventory(Long characterId, InventoryRequest request) {
+    public InventoryResponse upsertInventory(Long characterId, InventoryRequest request, Long currentUserId) {
         Character character = characterRepository.findById(characterId)
                 .orElseThrow(() -> new EntityNotFoundException("Character not found: " + characterId));
+        if (!character.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("Character does not belong to the authenticated user");
+        }
         Item item = itemRepository.findById(request.itemId())
                 .orElseThrow(() -> new EntityNotFoundException("Item not found: " + request.itemId()));
 
@@ -46,24 +50,36 @@ public class InventoryService {
         return toResponse(inventoryRepository.save(inventory));
     }
 
-    public List<InventoryResponse> getInventoryByCharacter(Long characterId) {
+    public List<InventoryResponse> getInventoryByCharacter(Long characterId, Long currentUserId) {
+        Character character = characterRepository.findById(characterId)
+                .orElseThrow(() -> new EntityNotFoundException("Character not found: " + characterId));
+        if (!character.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("Character does not belong to the authenticated user");
+        }
         return inventoryRepository.findByCharacterId(characterId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    public InventoryResponse getInventoryById(Long id) {
-        return inventoryRepository.findById(id)
-                .map(this::toResponse)
+    public InventoryResponse getInventoryById(Long id, Long currentUserId) {
+        Inventory inv = inventoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Inventory entry not found: " + id));
-    }
-
-    public void deleteInventoryEntry(Long id) {
-        if (!inventoryRepository.existsById(id)) {
+        // Treat another user's inventory entry as non-existent to prevent data leakage
+        if (!inv.getCharacter().getUser().getId().equals(currentUserId)) {
             throw new EntityNotFoundException("Inventory entry not found: " + id);
         }
-        inventoryRepository.deleteById(id);
+        return toResponse(inv);
+    }
+
+    public void deleteInventoryEntry(Long id, Long currentUserId) {
+        Inventory inv = inventoryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Inventory entry not found: " + id));
+        // Treat another user's inventory entry as non-existent to prevent data leakage
+        if (!inv.getCharacter().getUser().getId().equals(currentUserId)) {
+            throw new EntityNotFoundException("Inventory entry not found: " + id);
+        }
+        inventoryRepository.delete(inv);
     }
 
     private InventoryResponse toResponse(Inventory inv) {
