@@ -214,6 +214,41 @@ Triggered via `POST /api/admin/scrape` (ADMIN role required). Scrape status is a
 
 ---
 
+## Deployment (Linux / systemd)
+
+A systemd service unit (`tlim.service`) is included for running the application as a managed background service on Linux.
+
+**1. Create the environment file**
+
+Copy your environment variables to `/home/calga/tlim-java/.env.service`. This file is excluded from version control and is separate from your local `.env`.
+
+```
+DB_URL=jdbc:postgresql://localhost:5432/tlim
+DB_USERNAME=your_db_user
+DB_PASSWORD=your_db_password
+JWT_SECRET=your_jwt_secret
+```
+
+**2. Install and enable the service**
+
+```bash
+sudo cp tlim.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable tlim
+sudo systemctl start tlim
+```
+
+**3. Check status**
+
+```bash
+sudo systemctl status tlim
+journalctl -u tlim -f
+```
+
+The service restarts automatically on failure with a 10-second delay.
+
+---
+
 ## What is NOT in scope for Stage 2
 
 - React frontend (Stage 3)
@@ -251,7 +286,7 @@ Triggered via `POST /api/admin/scrape` (ADMIN role required). Scrape status is a
 - [x] Sale Decision Engine — per-character sell recommendations (`GET /api/inventory/characters/{id}/decisions`)
 - [x] Admin API + TibiaWiki scraper (`/api/admin`)
 - [x] Search and filter query params — `?name=` on items, `?location=` on hunt sessions
-- [ ] Deploy
+- [x] Deploy (systemd service unit)
 
 ### Stage 3 — React frontend *(planned)*
 
