@@ -13,6 +13,9 @@ public record ItemDecisionResponse(
         Integer bestNpcPrice,
         Integer marketPrice,
         SaleDecision decision,
-        int estimatedValue,
+        // Unit price of the recommended channel; 0 when there is nothing to sell or no price
+        int sellingPrice,
+        // surplusQuantity × sellingPrice
+        long estimatedValue,
         boolean missingMarketPrice
 ) {}

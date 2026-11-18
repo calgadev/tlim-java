@@ -1,6 +1,7 @@
 package com.tlim.item;
 
 import com.tlim.item.dto.ServerItemPriceResponse;
+import com.tlim.server.ServerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,15 +15,21 @@ public class ServerItemPriceService {
 
     private final ServerItemPriceRepository serverItemPriceRepository;
     private final ItemRepository itemRepository;
+    private final ServerRepository serverRepository;
 
     public ServerItemPriceService(ServerItemPriceRepository serverItemPriceRepository,
-                                  ItemRepository itemRepository) {
+                                  ItemRepository itemRepository,
+                                  ServerRepository serverRepository) {
         this.serverItemPriceRepository = serverItemPriceRepository;
         this.itemRepository = itemRepository;
+        this.serverRepository = serverRepository;
     }
 
     @Transactional
     public ServerItemPriceResponse upsertMarketPrice(Long serverId, Long itemId, Integer price) {
+        if (!serverRepository.existsById(serverId)) {
+            throw new EntityNotFoundException("Server not found: " + serverId);
+        }
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new EntityNotFoundException("Item not found: " + itemId));
 
@@ -42,6 +49,9 @@ public class ServerItemPriceService {
     }
 
     public List<ServerItemPriceResponse> getPricesByServer(Long serverId) {
+        if (!serverRepository.existsById(serverId)) {
+            throw new EntityNotFoundException("Server not found: " + serverId);
+        }
         return serverItemPriceRepository.findByServerId(serverId).stream()
                 .map(p -> {
                     String itemName = itemRepository.findById(p.getItemId())

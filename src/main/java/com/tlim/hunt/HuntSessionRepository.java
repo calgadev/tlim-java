@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface HuntSessionRepository extends JpaRepository<HuntSession, Long> {
 
-    List<HuntSession> findByCharacterId(Long characterId);
-    List<HuntSession> findByCharacterIdAndLocationContainingIgnoreCase(Long characterId, String location);
+    // Most recent sessions first, matching the Stage 1 hunt history
+    List<HuntSession> findByCharacterIdOrderByStartedAtDesc(Long characterId);
+    List<HuntSession> findByCharacterIdAndLocationContainingIgnoreCaseOrderByStartedAtDesc(Long characterId, String location);
 }

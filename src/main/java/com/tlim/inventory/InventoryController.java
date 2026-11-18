@@ -1,7 +1,5 @@
 package com.tlim.inventory;
 
-import com.tlim.character.CharacterService;
-import com.tlim.character.dto.CharacterResponse;
 import com.tlim.inventory.dto.InventoryRequest;
 import com.tlim.inventory.dto.InventoryResponse;
 import com.tlim.inventory.dto.SaleDecisionResponse;
@@ -12,11 +10,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/inventory")
@@ -25,14 +23,11 @@ public class InventoryController {
 
     private final InventoryService inventoryService;
     private final SaleDecisionService saleDecisionService;
-    private final CharacterService characterService;
 
     public InventoryController(InventoryService inventoryService,
-                               SaleDecisionService saleDecisionService,
-                               CharacterService characterService) {
+                               SaleDecisionService saleDecisionService) {
         this.inventoryService = inventoryService;
         this.saleDecisionService = saleDecisionService;
-        this.characterService = characterService;
     }
 
     @Operation(summary = "Upsert an inventory entry for a character")
@@ -63,23 +58,23 @@ public class InventoryController {
         return inventoryService.getInventoryByCharacter(characterId, currentUser.getId());
     }
 
-    @Operation(summary = "Compute sale decisions for all inventory items of a character")
+    @Operation(summary = "Compute sale decisions for all inventory items of a character, "
+            + "using market prices from the character's server")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Sale decisions computed"),
-        @ApiResponse(responseCode = "400", description = "Missing or invalid serverId"),
+        @ApiResponse(responseCode = "400", description = "Invalid decision or sortBy value"),
         @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
         @ApiResponse(responseCode = "403", description = "Character does not belong to the authenticated user"),
         @ApiResponse(responseCode = "404", description = "Character not found")
     })
     @GetMapping("/characters/{characterId}/decisions")
     public SaleDecisionResponse getDecisions(@PathVariable Long characterId,
-                                             @RequestParam Long serverId,
+                                             @RequestParam(required = false) SaleDecision decision,
+                                             @RequestParam(required = false) String sortBy,
                                              @AuthenticationPrincipal User currentUser) {
-        CharacterResponse character = characterService.getCharacterById(characterId);
-        if (!character.userId().equals(currentUser.getId())) {
-            throw new AccessDeniedException("Character does not belong to the authenticated user");
-        }
-        return saleDecisionService.calculateDecisions(characterId, serverId);
+        return saleDecisionService.calculateDecisions(characterId, currentUser.getId(),
+                Optional.ofNullable(decision),
+                Optional.ofNullable(sortBy).filter(s -> !s.isBlank()));
     }
 
     @Operation(summary = "Get a single inventory entry by ID")

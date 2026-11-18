@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 
 public record CreatureRequest(
         @NotBlank String name,
+        // In-game lowercase name used by the Hunt Analyser; defaults to name in lowercase
+        String actualName,
         String wikiUrl,
         String imageUrl,
         Integer hp,

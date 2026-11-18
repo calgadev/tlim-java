@@ -1,10 +1,8 @@
 package com.tlim.item.dto;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 
+// serverId and itemId come from the URL path. A null marketPrice clears the registered price.
 public record ServerItemPriceRequest(
-        @NotNull Long itemId,
-        @NotNull Long serverId,
         @Min(0) Integer marketPrice
 ) {}

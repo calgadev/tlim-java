@@ -30,6 +30,7 @@ public class CharacterService {
     public CharacterResponse createCharacter(CharacterRequest request, Long userId) {
         Server server = serverRepository.findById(request.serverId())
                 .orElseThrow(() -> new EntityNotFoundException("Server not found: " + request.serverId()));
+        requireActiveOrUnchanged(server, null);
 
         if (characterRepository.existsByUserIdAndName(userId, request.name())) {
             throw new IllegalArgumentException(
@@ -69,8 +70,16 @@ public class CharacterService {
             throw new EntityNotFoundException("Character not found: " + id);
         }
 
+        // Same rule as create — excluding the character being renamed
+        if (!character.getName().equals(request.name())
+                && characterRepository.existsByUserIdAndName(currentUserId, request.name())) {
+            throw new IllegalArgumentException(
+                    "You already have a character named '" + request.name() + "'");
+        }
+
         Server server = serverRepository.findById(request.serverId())
                 .orElseThrow(() -> new EntityNotFoundException("Server not found: " + request.serverId()));
+        requireActiveOrUnchanged(server, character.getServer());
 
         character.setName(request.name());
         character.setServer(server);
@@ -87,6 +96,14 @@ public class CharacterService {
             throw new EntityNotFoundException("Character not found: " + id);
         }
         characterRepository.delete(character);
+    }
+
+    // A closed world cannot receive new characters; existing characters there keep working
+    private static void requireActiveOrUnchanged(Server server, Server current) {
+        boolean unchanged = current != null && current.getId().equals(server.getId());
+        if (!server.isActive() && !unchanged) {
+            throw new IllegalArgumentException("Server '" + server.getName() + "' is no longer active");
+        }
     }
 
     private CharacterResponse toResponse(Character c) {

@@ -6,6 +6,7 @@ import java.util.List;
 public record CreatureResponse(
         Long id,
         String name,
+        String actualName,
         String wikiUrl,
         String imageUrl,
         Integer hp,

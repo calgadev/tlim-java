@@ -1,0 +1,89 @@
+{
+  "worlds": {
+    "players_online": 17439,
+    "record_players": 64028,
+    "record_date": "2007-11-28T18:26:00Z",
+    "regular_worlds": [
+      {
+        "name": "Antica",
+        "status": "online",
+        "players_online": 906,
+        "location": "Europe",
+        "pvp_type": "Open PvP",
+        "premium_only": false,
+        "transfer_type": "regular",
+        "battleye_protected": true,
+        "battleye_date": "2017-08-29",
+        "game_world_type": "regular",
+        "tournament_world_type": ""
+      },
+      {
+        "name": "Astera",
+        "status": "online",
+        "players_online": 286,
+        "location": "North America",
+        "pvp_type": "Optional PvP",
+        "premium_only": false,
+        "transfer_type": "regular",
+        "battleye_protected": true,
+        "battleye_date": "2017-09-12",
+        "game_world_type": "regular",
+        "tournament_world_type": ""
+      },
+      {
+        "name": "Eclipta",
+        "status": "online",
+        "players_online": 37,
+        "location": "Europe",
+        "pvp_type": "Retro Open PvP",
+        "premium_only": false,
+        "transfer_type": "regular",
+        "battleye_protected": true,
+        "battleye_date": "release",
+        "game_world_type": "regular",
+        "tournament_world_type": ""
+      },
+      {
+        "name": "Monstera",
+        "status": "online",
+        "players_online": 39,
+        "location": "North America",
+        "pvp_type": "Retro Hardcore PvP",
+        "premium_only": false,
+        "transfer_type": "regular",
+        "battleye_protected": true,
+        "battleye_date": "release",
+        "game_world_type": "regular",
+        "tournament_world_type": ""
+      },
+      {
+        "name": "Zuna",
+        "status": "online",
+        "players_online": 9,
+        "location": "Europe",
+        "pvp_type": "Hardcore PvP",
+        "premium_only": false,
+        "transfer_type": "locked",
+        "battleye_protected": true,
+        "battleye_date": "2025-02-18",
+        "game_world_type": "experimental",
+        "tournament_world_type": ""
+      }
+    ],
+    "tournament_worlds": null
+  },
+  "information": {
+    "api": {
+      "version": 4,
+      "release": "4.10.0",
+      "commit": "d53b603c7e235c45268bcf878ef2921b2356cf75"
+    },
+    "timestamp": "2026-11-18T20:41:10Z",
+    "tibia_urls": [
+      "https://www.tibia.com/community/?subtopic=worlds"
+    ],
+    "status": {
+      "http_code": 200
+    }
+  }
+}

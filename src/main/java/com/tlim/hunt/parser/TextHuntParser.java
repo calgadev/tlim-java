@@ -18,8 +18,8 @@ public class TextHuntParser {
             "From (\\d{4}-\\d{2}-\\d{2}, \\d{2}:\\d{2}:\\d{2}) to (\\d{4}-\\d{2}-\\d{2}, \\d{2}:\\d{2}:\\d{2})");
 
     // Anchored at start, fixed alternatives only — no quantified groups, no backtracking risk
-    private static final Pattern COUNT_NAME_PATTERN = Pattern.compile("^(\\d+)x (.+)$");
-    private static final Pattern ARTICLE_PATTERN = Pattern.compile("^(a|an) ");
+    private static final Pattern COUNT_NAME_PATTERN = Pattern.compile("^([\\d,]+)x (.+)$");
+    private static final Pattern ARTICLE_PATTERN = Pattern.compile("^(a|an) ", Pattern.CASE_INSENSITIVE);
 
     public ParsedHunt parse(String rawText) {
         LocalDateTime sessionStart = null;
@@ -52,7 +52,7 @@ public class TextHuntParser {
             if ("monsters".equals(section)) {
                 Matcher m = COUNT_NAME_PATTERN.matcher(line);
                 if (m.matches()) {
-                    monsters.add(new ParsedMonster(m.group(2), Integer.parseInt(m.group(1))));
+                    monsters.add(new ParsedMonster(m.group(2).strip(), parseCount(m.group(1))));
                 }
                 continue;
             }
@@ -60,8 +60,8 @@ public class TextHuntParser {
             if ("items".equals(section)) {
                 Matcher m = COUNT_NAME_PATTERN.matcher(line);
                 if (m.matches()) {
-                    String name = ARTICLE_PATTERN.matcher(m.group(2)).replaceFirst("");
-                    items.add(new ParsedItem(name, Integer.parseInt(m.group(1))));
+                    String name = ARTICLE_PATTERN.matcher(m.group(2).strip()).replaceFirst("");
+                    items.add(new ParsedItem(name, parseCount(m.group(1))));
                 }
                 continue;
             }
@@ -95,6 +95,14 @@ public class TextHuntParser {
         return new ParsedHunt(sessionStart, sessionEnd, duration,
                 rawXp, xpWithBonus, lootTotal, supplies, damage, healing,
                 items, monsters);
+    }
+
+    private int parseCount(String raw) {
+        try {
+            return Integer.parseInt(raw.replace(",", ""));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid quantity in hunt log: " + raw);
+        }
     }
 
     private Integer parseIntValue(String raw) {

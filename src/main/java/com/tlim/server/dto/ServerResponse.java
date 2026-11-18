@@ -8,5 +8,7 @@ public record ServerResponse(
         Long id,
         String name,
         PvpType pvpType,
+        String location,
+        boolean active,
         Instant createdAt
 ) {}

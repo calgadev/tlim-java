@@ -118,8 +118,9 @@ public class CreatureScraper {
         Integer drownResistance    = parseResistance(fields.get("drowndmgmod"));
 
         // Upsert creature
-        Creature creature = creatureRepository.findByName(name).orElse(new Creature());
+        Creature creature = creatureRepository.findFirstByNameIgnoreCase(name).orElse(new Creature());
         creature.setName(name);
+        creature.setActualName(ItemScraper.resolveActualName(fields.get("actualname"), name));
         creature.setWikiUrl(wikiUrl);
         creature.setImageUrl(imageUrl);
         creature.setHp(hp);
@@ -138,7 +139,7 @@ public class CreatureScraper {
         String lootBlock = findLootBlock(wikitext);
         if (lootBlock != null) {
             for (LootEntry entry : parseLootEntries(lootBlock)) {
-                Item item = itemRepository.findByName(entry.itemName()).orElse(null);
+                Item item = itemRepository.findFirstByNameIgnoreCase(entry.itemName()).orElse(null);
                 if (item == null) {
                     log.warn("Unknown loot item '{}' for creature '{}' — skipping", entry.itemName(), name);
                     continue;

@@ -1,5 +1,6 @@
 package com.tlim.admin;
 
+import com.tlim.scraper.ScraperException;
 import com.tlim.scraper.ScraperService;
 import com.tlim.scraper.dto.ScrapeStatusResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +37,7 @@ public class AdminController {
     }
 
     @PostMapping("/scrape")
-    @Operation(summary = "Trigger a full TibiaWiki scrape asynchronously")
+    @Operation(summary = "Trigger a full scrape asynchronously: world list, then TibiaWiki items and creatures")
     @ApiResponses({
         @ApiResponse(responseCode = "202", description = "Scrape started"),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -67,6 +68,24 @@ public class AdminController {
             });
 
         return ResponseEntity.accepted().body(lastStatus);
+    }
+
+    @PostMapping("/scrape/servers")
+    @Operation(summary = "Synchronise game servers with the official world list (runs synchronously)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Servers synchronised"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden — ADMIN role required"),
+        @ApiResponse(responseCode = "502", description = "World list source unavailable or returned no worlds")
+    })
+    public ResponseEntity<Object> scrapeServers() {
+        try {
+            return ResponseEntity.ok(scraperService.scrapeServers());
+        } catch (ScraperException e) {
+            // Safe summary only — upstream details stay in the server log
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(Map.of("status", 502, "error", "Bad Gateway", "message", "World list source unavailable"));
+        }
     }
 
     @GetMapping("/scrape/status")

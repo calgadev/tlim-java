@@ -27,6 +27,7 @@ public class ItemService {
         }
         Item item = new Item();
         item.setName(request.name());
+        item.setActualName(actualNameOrDefault(request.actualName(), request.name()));
         item.setDescription(request.description());
         item.setImageUrl(request.imageUrl());
         item.setWeight(request.weight());
@@ -59,6 +60,7 @@ public class ItemService {
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Item not found: " + id));
         item.setName(request.name());
+        item.setActualName(actualNameOrDefault(request.actualName(), request.name()));
         item.setDescription(request.description());
         item.setImageUrl(request.imageUrl());
         item.setWeight(request.weight());
@@ -84,6 +86,7 @@ public class ItemService {
         return new ItemResponse(
                 item.getId(),
                 item.getName(),
+                item.getActualName(),
                 item.getWikiUrl(),
                 item.getDescription(),
                 item.getImageUrl(),
@@ -96,5 +99,11 @@ public class ItemService {
                 buyers,
                 item.getUpdatedAt()
         );
+    }
+
+    static String actualNameOrDefault(String actualName, String name) {
+        return (actualName == null || actualName.isBlank())
+                ? name.trim().toLowerCase()
+                : actualName.trim().toLowerCase();
     }
 }

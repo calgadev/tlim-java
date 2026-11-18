@@ -35,16 +35,15 @@ public class ServerItemPriceController {
     @Operation(summary = "Create or update a market price for a server/item pair")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Price upserted"),
-        @ApiResponse(responseCode = "400", description = "marketPrice is negative or required fields are missing"),
+        @ApiResponse(responseCode = "400", description = "marketPrice is negative"),
         @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
-        @ApiResponse(responseCode = "404", description = "Item not found")
+        @ApiResponse(responseCode = "404", description = "Server or item not found")
     })
     @PutMapping("/{itemId}")
     public ServerItemPriceResponse upsertMarketPrice(
             @PathVariable Long serverId,
             @PathVariable Long itemId,
             @Valid @RequestBody ServerItemPriceRequest request) {
-        // Path variables are authoritative — body serverId/itemId are validated but ignored for routing
         return serverItemPriceService.upsertMarketPrice(serverId, itemId, request.marketPrice());
     }
 }
