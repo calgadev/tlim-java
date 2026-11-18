@@ -19,12 +19,29 @@ public class Server {
     @Column(name = "pvp_type", nullable = false, length = 30)
     private PvpType pvpType;
 
+    // Region from the official world list, e.g. "Europe", "North America", "South America"
+    @Column(length = 50)
+    private String location;
+
+    // False when the world no longer appears in the official list (merged or closed)
+    @Column(nullable = false)
+    private boolean active = true;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
     @PrePersist
     private void prePersist() {
         createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    private void preUpdate() {
+        updatedAt = Instant.now();
     }
 
     public Long getId() { return id; }
@@ -36,5 +53,13 @@ public class Server {
     public PvpType getPvpType() { return pvpType; }
     public void setPvpType(PvpType pvpType) { this.pvpType = pvpType; }
 
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+
     public Instant getCreatedAt() { return createdAt; }
+
+    public Instant getUpdatedAt() { return updatedAt; }
 }

@@ -23,11 +23,15 @@ public class ServerService {
         Server server = new Server();
         server.setName(request.name());
         server.setPvpType(request.pvpType());
+        server.setLocation(request.location());
         return toResponse(serverRepository.save(server));
     }
 
-    public List<ServerResponse> getAllServers() {
-        return serverRepository.findAll().stream()
+    public List<ServerResponse> getAllServers(boolean includeInactive) {
+        List<Server> servers = includeInactive
+                ? serverRepository.findAllByOrderByNameAsc()
+                : serverRepository.findByActiveTrueOrderByNameAsc();
+        return servers.stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -38,8 +42,14 @@ public class ServerService {
 
     public ServerResponse updateServer(Long id, ServerRequest request) {
         Server server = findOrThrow(id);
+        serverRepository.findByName(request.name())
+                .filter(other -> !other.getId().equals(id))
+                .ifPresent(other -> {
+                    throw new IllegalArgumentException("Server name already taken: " + request.name());
+                });
         server.setName(request.name());
         server.setPvpType(request.pvpType());
+        server.setLocation(request.location());
         return toResponse(serverRepository.save(server));
     }
 
@@ -54,6 +64,7 @@ public class ServerService {
     }
 
     private ServerResponse toResponse(Server server) {
-        return new ServerResponse(server.getId(), server.getName(), server.getPvpType(), server.getCreatedAt());
+        return new ServerResponse(server.getId(), server.getName(), server.getPvpType(),
+                server.getLocation(), server.isActive(), server.getCreatedAt());
     }
 }

@@ -73,6 +73,9 @@ public class CreatureService {
 
     private void applyRequest(Creature creature, CreatureRequest request) {
         creature.setName(request.name());
+        creature.setActualName((request.actualName() == null || request.actualName().isBlank())
+                ? request.name().trim().toLowerCase()
+                : request.actualName().trim().toLowerCase());
         creature.setWikiUrl(request.wikiUrl());
         creature.setImageUrl(request.imageUrl());
         creature.setHp(request.hp());
@@ -91,6 +94,7 @@ public class CreatureService {
         return new CreatureResponse(
                 creature.getId(),
                 creature.getName(),
+                creature.getActualName(),
                 creature.getWikiUrl(),
                 creature.getImageUrl(),
                 creature.getHp(),

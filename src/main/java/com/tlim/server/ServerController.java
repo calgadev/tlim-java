@@ -35,14 +35,14 @@ public class ServerController {
         return serverService.createServer(request);
     }
 
-    @Operation(summary = "List all servers")
+    @Operation(summary = "List game servers — active worlds only unless includeInactive=true")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Server list returned"),
         @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
     })
     @GetMapping
-    public List<ServerResponse> getAllServers() {
-        return serverService.getAllServers();
+    public List<ServerResponse> getAllServers(@RequestParam(defaultValue = "false") boolean includeInactive) {
+        return serverService.getAllServers(includeInactive);
     }
 
     @Operation(summary = "Get a server by ID")

@@ -1,0 +1,21 @@
+Session data: From 2026-01-23, 18:13:14 to 2026-01-23, 18:24:01
+Session: 00:10h
+Raw XP Gain: 17,701
+XP Gain: 26,551
+Raw XP/h: 99,584
+XP/h: 149,373
+Loot: 1,479
+Supplies: 4,543
+Balance: -3,064
+Damage: 31,183
+Damage/h: 31,183
+Healing: 6,401
+Healing/h: 6,401
+Killed Monsters:
+  20x bog raider
+  12x carrion worm
+  21x rotworm
+Looted Items:
+  725x a gold coin
+  1x a great spirit potion
+  1x a belted cape

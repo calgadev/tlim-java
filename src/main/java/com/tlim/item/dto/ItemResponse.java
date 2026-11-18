@@ -7,6 +7,7 @@ import java.util.List;
 public record ItemResponse(
         Long id,
         String name,
+        String actualName,
         String wikiUrl,
         String description,
         String imageUrl,

@@ -100,10 +100,14 @@ src/
 │   └── resources/
 │       ├── application.properties      ← All credentials read from environment variables
 │       ├── application-prod.properties
-│       └── db/migration/               ← Flyway versioned migrations (V1–V12)
+│       └── db/migration/               ← Flyway versioned migrations (V1–V14)
 └── test/
     └── java/com/tlim/
-        └── TlimApplicationTests.java
+        ├── config/                     ← Security rules (WebMvc slice test)
+        ├── hunt/                       ← Hunt import and deletion service tests
+        │   └── parser/                 ← Text and JSON parsers against real Hunt Analyser exports
+        ├── inventory/                  ← Sale decision engine tests
+        └── scraper/                    ← TibiaWiki "sellto" parsing tests
 ```
 
 ---
@@ -163,7 +167,34 @@ cp .env.example .env
 
 Flyway will run all migrations automatically on first start. The API will be available at `http://localhost:8080`.
 
+Run the tests with `./mvnw test`. They are unit and web-slice tests and do not need a database.
+
 Swagger UI: `http://localhost:8080/swagger-ui.html`
+
+### Local PostgreSQL on Windows without admin rights
+
+The official EDB "binaries" zip runs without an installer or a Windows service:
+
+```powershell
+# 1. Download and extract (pgAdmin and StackBuilder are not needed)
+$pg = "$env:LOCALAPPDATA\PostgreSQL"
+$bin = "$pg\17\pgsql\bin"
+New-Item -ItemType Directory -Force "$pg\17" | Out-Null
+curl.exe -L -o "$pg\pg.zip" https://get.enterprisedb.com/postgresql/postgresql-17.12-1-windows-x64-binaries.zip
+tar -xf "$pg\pg.zip" -C "$pg\17" --exclude "pgsql/pgAdmin 4" --exclude "pgsql/StackBuilder" --exclude "pgsql/symbols"
+
+# 2. Create the cluster (you will be asked for the postgres superuser password)
+& "$bin\initdb.exe" -D "$pg\data" -U postgres -A scram-sha-256 -W -E UTF8 --locale=C
+
+# 3. Start it (listens on localhost:5432 only)
+& "$bin\pg_ctl.exe" -D "$pg\data" -l "$pg\postgres.log" start
+
+# 4. Create the application role and database
+& "$bin\psql.exe" -h localhost -U postgres -c "CREATE ROLE tlim_user LOGIN PASSWORD 'choose-a-password';"
+& "$bin\psql.exe" -h localhost -U postgres -c "CREATE DATABASE tlim OWNER tlim_user ENCODING 'UTF8';"
+```
+
+Put the same credentials in `.env`, then run the app from Git Bash with `set -a && . ./.env && set +a && ./mvnw spring-boot:run`. Without a service, PostgreSQL must be started again after each reboot (step 3).
 
 ---
 
@@ -171,7 +202,18 @@ Swagger UI: `http://localhost:8080/swagger-ui.html`
 
 All endpoints are documented and testable via Swagger UI at `/swagger-ui.html`.
 
-Protected endpoints require a Bearer JWT token. Use `POST /api/auth/register` to create a user and `POST /api/auth/login` to obtain a token.
+Protected endpoints require a Bearer JWT token. Use `POST /api/auth/register` to create a user and `POST /api/auth/login` to obtain a token. Requests without a valid token receive `401`.
+
+**Permissions**
+
+| Resource | Read | Create / update / delete |
+|---|---|---|
+| Servers, Items, Creatures (shared catalog) | any authenticated user | `ADMIN` only |
+| Server item prices (`/api/servers/{serverId}/item-prices`) | any authenticated user | any authenticated user |
+| Characters, Inventory, Hunt Sessions | owner only | owner only |
+| Admin (`/api/admin`) | `ADMIN` only | `ADMIN` only |
+
+**Game servers** come from the official world list, read through the [TibiaData API](https://api.tibiadata.com) (tibia.com itself rejects automated clients). On the first start, when the `servers` table is empty, the list is imported automatically (disable with `tlim.scraper.servers-on-startup=false`). `POST /api/admin/scrape/servers` re-synchronises it on demand. Worlds that disappear from the list (merged or closed) are kept, because characters may still reference them, but flagged `active = false`: `GET /api/servers` hides them unless `?includeInactive=true`, and new characters cannot be created on them.
 
 | Group | Base path |
 |---|---|
@@ -194,7 +236,25 @@ Protected endpoints require a Bearer JWT token. Use `POST /api/auth/register` to
 |---|---|---|
 | `GET /api/items` | `?name=rotworm` | Returns items whose name contains the value (case-insensitive). Absent or blank falls through to all items. |
 | `GET /api/items` | `?category=weapon` | Returns items in that category. Takes precedence over `?name=` when both are supplied. |
-| `GET /api/hunt-sessions/characters/{id}` | `?location=Drefia` | Returns sessions whose location contains the value (case-insensitive). Absent or blank returns all sessions for the character. |
+| `GET /api/hunt-sessions/characters/{id}` | `?location=Drefia` | Returns sessions whose location contains the value (case-insensitive). Absent or blank returns all sessions for the character. Always ordered by session start, most recent first. |
+| `GET /api/inventory/characters/{id}/decisions` | `?decision=SELL_NPC` | Only returns items with that decision (`KEEP`, `SELL_NPC`, `SELL_MARKET`, `NO_PRICE`). `passiveGold` and `grossValue` still cover the whole inventory. |
+| `GET /api/inventory/characters/{id}/decisions` | `?sortBy=value` | `value` (estimated value, highest first) or `name`. Default: items needing action first (`SELL_NPC` → `SELL_MARKET` → `NO_PRICE` → `KEEP`). |
+
+---
+
+## Sale Decision Engine
+
+`GET /api/inventory/characters/{id}/decisions` recommends what to do with each inventory item, using the market prices registered for the **character's own server** and the best price among the item's NPC buyers (scraped from TibiaWiki).
+
+1. **Surplus** = `currentQuantity − targetQuantity` (never negative). A `targetQuantity` of `0` means no goal: the whole stock is available.
+2. **Decision**, evaluated in order:
+   - no surplus → `KEEP`
+   - no NPC buyer and no market price → `NO_PRICE`
+   - no NPC buyer → `SELL_MARKET`
+   - NPC buyer but no market price → `SELL_NPC` with `missingMarketPrice = true`
+   - best NPC price ≥ market price → `SELL_NPC` (ties go to the NPC: instant sale, no market fee)
+   - otherwise → `SELL_MARKET`
+3. **Values**: `sellingPrice` is the unit price of the chosen channel, `estimatedValue = surplus × sellingPrice`, `passiveGold` is the sum of `estimatedValue`, and `grossValue` prices the full stock at the best known price.
 
 ---
 
@@ -229,6 +289,17 @@ Two endpoints accept hunt session data exported from the in-game Hunt Analyser:
 | `allyEmLevel` | Integer | Level of the party's Exalted Monk |
 | `location` | String | Hunting spot description (free text) |
 
+**What an import does**
+
+1. Parses the log. Item articles are stripped (`a gold coin` → `gold coin`).
+2. Matches each name, case-insensitively, against the in-game name (`actualName`, from the TibiaWiki `actualname` field), falling back to the display name.
+3. Saves the session with its looted items and killed monsters. Entries that resolve to the same item or creature are merged.
+4. **Adds the looted quantities to the character's inventory.** New entries start with no goal (`targetQuantity = 0`).
+
+Deleting a hunt session (`DELETE /api/hunt-sessions/{id}`) subtracts its loot from the inventory again, never going below zero.
+
+The response includes `balance` (`lootTotal − supplies`), computed at read time.
+
 **Response — skipped names**
 
 If the raw data contains item or creature names not found in the database, the import does not fail. Instead, the response includes:
@@ -238,7 +309,7 @@ If the raw data contains item or creature names not found in the database, the i
 | `skippedItems` | `List<String>` | Item names from the parsed data that had no match in the Items table. Empty list when all matched. |
 | `skippedMonsters` | `List<String>` | Creature names from the parsed data that had no match in the Creatures table. Empty list when all matched. |
 
-A 201 response with non-empty skip lists means the session was saved successfully — only the unrecognised entries were omitted. Run the TibiaWiki scraper (`POST /api/admin/scrape`) if items or creatures are missing.
+A 201 response with non-empty skip lists means the session was saved successfully — only the unrecognised entries were omitted (and not added to the inventory). Run the TibiaWiki scraper (`POST /api/admin/scrape`) if items or creatures are missing.
 
 ---
 
@@ -327,7 +398,9 @@ The application is structured around feature-based packages (`com.tlim.<domain>`
 
 The scraper performs a three-level crawl of [tibia.fandom.com](https://tibia.fandom.com) using the MediaWiki JSON API, populating items and creatures via upsert (no duplicates on re-run). A 700ms delay between requests is applied to avoid rate limiting.
 
-Triggered via `POST /api/admin/scrape` (ADMIN role required). Scrape status is available at `GET /api/admin/scrape/status`.
+For each item it stores the in-game name (`actualname`) used to match Hunt Analyser logs, and builds the NPC buyer list from the infobox `sellto` field. NPCs listed without an explicit price pay the item's `npcvalue`; entries such as `H.L.: 115` override it.
+
+Triggered via `POST /api/admin/scrape` (ADMIN role required). The full run synchronises the game world list first, then crawls items and creatures. Scrape status is available at `GET /api/admin/scrape/status`.
 
 ---
 

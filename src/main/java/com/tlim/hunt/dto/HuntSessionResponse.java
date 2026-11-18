@@ -17,6 +17,7 @@ public record HuntSessionResponse(
         int xpWithBonus,
         int lootTotal,
         int supplies,
+        int balance,
         int damage,
         int healing,
         Integer charLevel,

@@ -112,8 +112,9 @@ public class ItemScraper {
         boolean isImbuementMaterial = "yes".equalsIgnoreCase(fields.get("imbuing"));
 
         // Upsert item
-        Item item = itemRepository.findByName(name).orElse(new Item());
+        Item item = itemRepository.findFirstByNameIgnoreCase(name).orElse(new Item());
         item.setName(name);
+        item.setActualName(resolveActualName(fields.get("actualname"), name));
         item.setWikiUrl(wikiUrl);
         item.setDescription(description);
         item.setImageUrl(imageUrl);
@@ -124,28 +125,10 @@ public class ItemScraper {
         item.setDeliveryItem(false);
         item = itemRepository.save(item);
 
-        // Parse NPC buyers from wikitext before touching the database
-        List<ParsedBuyer> parsedBuyers = new ArrayList<>();
-        String npcBlock = extractBlock(wikitext, "{{NPC Buyers");
-        if (npcBlock != null) {
-            // NPC buyer keys are NPC names — parse without lowercasing the key
-            String npcInner = npcBlock.substring(2, npcBlock.length() - 2);
-            List<String> npcSegments = splitAtTopLevelPipe(npcInner);
-            for (int i = 1; i < npcSegments.size(); i++) {
-                String segment = npcSegments.get(i).trim();
-                int eq = segment.indexOf('=');
-                if (eq == -1) continue;
-                String npcName = segment.substring(0, eq).trim();
-                String priceStr = segment.substring(eq + 1).trim().replace(",", "");
-                if (npcName.isEmpty() || priceStr.isEmpty()) continue;
-                try {
-                    parsedBuyers.add(new ParsedBuyer(npcName, Integer.parseInt(priceStr)));
-                } catch (NumberFormatException e) {
-                    // skip entries with unparseable prices
-                }
-            }
-        } else {
-            log.debug("No NPC Buyers block found for item '{}'", name);
+        // NPC buyers come from the infobox "sellto" field; "npcvalue" is the default price
+        List<ParsedBuyer> parsedBuyers = parseSellTo(fields.get("sellto"), fields.get("npcvalue"));
+        if (parsedBuyers.isEmpty()) {
+            log.debug("No NPC buyers found for item '{}'", name);
         }
 
         // Replace NPC buyers atomically: if an insert fails mid-way, the delete is rolled back too
@@ -163,7 +146,67 @@ public class ItemScraper {
         });
     }
 
-    private record ParsedBuyer(String npcName, int price) {}
+    record ParsedBuyer(String npcName, int price) {}
+
+    /**
+     * Parses the Infobox Object "sellto" field into NPC buyers.
+     * Real formats seen on TibiaWiki:
+     *   "--"                                   no NPC buys the item
+     *   "Fiona, Yasir"                         every NPC pays npcvalue
+     *   "H.L.: 115, Nah'Bob, Shanar: 360"      explicit price overrides npcvalue
+     *   "Inigo, Tom:12"                        no space after the colon
+     *   "The Bone Master;bob-rank1"            ";..." is an access condition, dropped
+     * Entries without a usable positive price are skipped; duplicate NPC names keep the highest price.
+     */
+    static List<ParsedBuyer> parseSellTo(String sellTo, String npcValue) {
+        List<ParsedBuyer> buyers = new ArrayList<>();
+        if (sellTo == null) return buyers;
+        String cleaned = sellTo.replace("[[", "").replace("]]", "").trim();
+        if (cleaned.isEmpty() || cleaned.startsWith("--") || cleaned.equals("?")) return buyers;
+
+        Integer defaultPrice = parsePrice(npcValue);
+        Map<String, Integer> byName = new LinkedHashMap<>();
+        for (String rawEntry : cleaned.split(",")) {
+            String entry = rawEntry.trim();
+            int semicolon = entry.indexOf(';');
+            if (semicolon != -1) entry = entry.substring(0, semicolon).trim();
+            if (entry.isEmpty()) continue;
+
+            String npcName = entry;
+            Integer price = defaultPrice;
+            int colon = entry.lastIndexOf(':');
+            if (colon != -1) {
+                Integer explicit = parsePrice(entry.substring(colon + 1));
+                if (explicit != null) {
+                    npcName = entry.substring(0, colon).trim();
+                    price = explicit;
+                }
+            }
+            if (npcName.isEmpty() || price == null || price <= 0) continue;
+            byName.merge(npcName, price, Math::max);
+        }
+        byName.forEach((npc, price) -> buyers.add(new ParsedBuyer(npc, price)));
+        return buyers;
+    }
+
+    private static Integer parsePrice(String raw) {
+        if (raw == null) return null;
+        String digits = raw.trim().replace(",", "");
+        if (!digits.matches("\\d+")) return null;
+        try {
+            return Integer.parseInt(digits);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /** Lowercase in-game name; falls back to the display name when the wiki omits "actualname". */
+    static String resolveActualName(String actualName, String displayName) {
+        if (actualName != null && !actualName.isBlank() && !actualName.trim().equals("?")) {
+            return actualName.trim().toLowerCase();
+        }
+        return displayName.toLowerCase();
+    }
 
     private List<String> fetchCategoryMembers(String cmtitle, String cmtype) {
         List<String> titles = new ArrayList<>();

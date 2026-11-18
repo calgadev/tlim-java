@@ -1,0 +1,484 @@
+{
+    "Balance": "441,915",
+    "Damage": "1,593,444",
+    "Damage/h": "840,264",
+    "Healing": "196,367",
+    "Healing/h": "103,549",
+    "Killed Monsters": [
+        {
+            "Count": 1,
+            "Name": "amazon"
+        },
+        {
+            "Count": 47,
+            "Name": "blood beast"
+        },
+        {
+            "Count": 4,
+            "Name": "cobra"
+        },
+        {
+            "Count": 1,
+            "Name": "crazed beggar"
+        },
+        {
+            "Count": 1,
+            "Name": "crystal spider"
+        },
+        {
+            "Count": 18,
+            "Name": "deepling guard"
+        },
+        {
+            "Count": 1,
+            "Name": "deepling master librarian"
+        },
+        {
+            "Count": 106,
+            "Name": "deepling scout"
+        },
+        {
+            "Count": 37,
+            "Name": "deepling spellsinger"
+        },
+        {
+            "Count": 1,
+            "Name": "deepling tyrant"
+        },
+        {
+            "Count": 69,
+            "Name": "deepling warrior"
+        },
+        {
+            "Count": 3,
+            "Name": "deepling worker"
+        },
+        {
+            "Count": 23,
+            "Name": "devourer"
+        },
+        {
+            "Count": 48,
+            "Name": "execowtioner"
+        },
+        {
+            "Count": 4,
+            "Name": "ghost"
+        },
+        {
+            "Count": 61,
+            "Name": "glooth blob"
+        },
+        {
+            "Count": 5,
+            "Name": "jellyfish"
+        },
+        {
+            "Count": 2,
+            "Name": "lich"
+        },
+        {
+            "Count": 36,
+            "Name": "minotaur amazon"
+        },
+        {
+            "Count": 107,
+            "Name": "misguided bully"
+        },
+        {
+            "Count": 7,
+            "Name": "misguided shadow"
+        },
+        {
+            "Count": 80,
+            "Name": "misguided thief"
+        },
+        {
+            "Count": 76,
+            "Name": "moohtant"
+        },
+        {
+            "Count": 1,
+            "Name": "mutated bat"
+        },
+        {
+            "Count": 7,
+            "Name": "necromancer"
+        },
+        {
+            "Count": 37,
+            "Name": "nightstalker"
+        },
+        {
+            "Count": 6,
+            "Name": "pig"
+        },
+        {
+            "Count": 4,
+            "Name": "pirate buccaneer"
+        },
+        {
+            "Count": 8,
+            "Name": "pirate cutthroat"
+        },
+        {
+            "Count": 7,
+            "Name": "pirate ghost"
+        },
+        {
+            "Count": 17,
+            "Name": "pirate marauder"
+        },
+        {
+            "Count": 38,
+            "Name": "pirate skeleton"
+        },
+        {
+            "Count": 28,
+            "Name": "quara constrictor scout"
+        },
+        {
+            "Count": 32,
+            "Name": "quara hydromancer scout"
+        },
+        {
+            "Count": 28,
+            "Name": "quara pincher scout"
+        },
+        {
+            "Count": 37,
+            "Name": "quara predator scout"
+        },
+        {
+            "Count": 52,
+            "Name": "rot elemental"
+        },
+        {
+            "Count": 4,
+            "Name": "scorpion"
+        },
+        {
+            "Count": 5,
+            "Name": "shark"
+        },
+        {
+            "Count": 1,
+            "Name": "skeleton"
+        },
+        {
+            "Count": 7,
+            "Name": "slime"
+        },
+        {
+            "Count": 1,
+            "Name": "smuggler"
+        },
+        {
+            "Count": 1,
+            "Name": "troll champion"
+        },
+        {
+            "Count": 1,
+            "Name": "wild warrior"
+        },
+        {
+            "Count": 1,
+            "Name": "wyvern"
+        },
+        {
+            "Count": 136,
+            "Name": "zombie"
+        }
+    ],
+    "Loot": "570,294",
+    "Looted Items": [
+        {
+            "Count": 14,
+            "Name": "a strong mana potion"
+        },
+        {
+            "Count": 28,
+            "Name": "a great mana potion"
+        },
+        {
+            "Count": 1,
+            "Name": "a white pearl"
+        },
+        {
+            "Count": 5,
+            "Name": "a small diamond"
+        },
+        {
+            "Count": 9,
+            "Name": "a small sapphire"
+        },
+        {
+            "Count": 26,
+            "Name": "a small ruby"
+        },
+        {
+            "Count": 55389,
+            "Name": "a gold coin"
+        },
+        {
+            "Count": 19,
+            "Name": "a small emerald"
+        },
+        {
+            "Count": 6,
+            "Name": "a small amethyst"
+        },
+        {
+            "Count": 255,
+            "Name": "a platinum coin"
+        },
+        {
+            "Count": 6,
+            "Name": "a yellow gem"
+        },
+        {
+            "Count": 9,
+            "Name": "a red gem"
+        },
+        {
+            "Count": 11,
+            "Name": "a life ring"
+        },
+        {
+            "Count": 1,
+            "Name": "a terra rod"
+        },
+        {
+            "Count": 3,
+            "Name": "a stone skin amulet"
+        },
+        {
+            "Count": 6,
+            "Name": "a ring of healing"
+        },
+        {
+            "Count": 3,
+            "Name": "a halberd"
+        },
+        {
+            "Count": 1,
+            "Name": "a knight axe"
+        },
+        {
+            "Count": 2,
+            "Name": "meat"
+        },
+        {
+            "Count": 23,
+            "Name": "a fish"
+        },
+        {
+            "Count": 25,
+            "Name": "shrimp"
+        },
+        {
+            "Count": 3,
+            "Name": "a shadow herb"
+        },
+        {
+            "Count": 15,
+            "Name": "minotaur leather"
+        },
+        {
+            "Count": 3,
+            "Name": "a fish fin"
+        },
+        {
+            "Count": 2,
+            "Name": "a red piece of cloth"
+        },
+        {
+            "Count": 1,
+            "Name": "a hook"
+        },
+        {
+            "Count": 2,
+            "Name": "a chaos mace"
+        },
+        {
+            "Count": 1,
+            "Name": "a spiked squelcher"
+        },
+        {
+            "Count": 21,
+            "Name": "a small topaz"
+        },
+        {
+            "Count": 4,
+            "Name": "a gold ingot"
+        },
+        {
+            "Count": 3,
+            "Name": "a spooky blue eye"
+        },
+        {
+            "Count": 10,
+            "Name": "a half-eaten brain"
+        },
+        {
+            "Count": 6,
+            "Name": "a compass"
+        },
+        {
+            "Count": 11,
+            "Name": "a minotaur horn"
+        },
+        {
+            "Count": 7,
+            "Name": "a quara tentacle"
+        },
+        {
+            "Count": 2,
+            "Name": "a quara eye"
+        },
+        {
+            "Count": 4,
+            "Name": "quara pincers"
+        },
+        {
+            "Count": 3,
+            "Name": "a quara bone"
+        },
+        {
+            "Count": 1,
+            "Name": "a heavy trident"
+        },
+        {
+            "Count": 5,
+            "Name": "an eye of a deepling"
+        },
+        {
+            "Count": 2,
+            "Name": "a deepling staff"
+        },
+        {
+            "Count": 5,
+            "Name": "a spellsinger's seal"
+        },
+        {
+            "Count": 3,
+            "Name": "a key to the Drowned Library"
+        },
+        {
+            "Count": 2,
+            "Name": "a deepling guard belt buckle"
+        },
+        {
+            "Count": 1,
+            "Name": "a deepling breaktime snack"
+        },
+        {
+            "Count": 11,
+            "Name": "deepling warts"
+        },
+        {
+            "Count": 12,
+            "Name": "deeptags"
+        },
+        {
+            "Count": 1,
+            "Name": "deepling scales"
+        },
+        {
+            "Count": 7,
+            "Name": "a deepling ridge"
+        },
+        {
+            "Count": 1,
+            "Name": "a warrior's shield"
+        },
+        {
+            "Count": 1,
+            "Name": "a guardian axe"
+        },
+        {
+            "Count": 2,
+            "Name": "a deepling claw"
+        },
+        {
+            "Count": 19,
+            "Name": "a deepling filet"
+        },
+        {
+            "Count": 3,
+            "Name": "a glooth spear"
+        },
+        {
+            "Count": 2,
+            "Name": "a moohtant cudgel"
+        },
+        {
+            "Count": 1,
+            "Name": "a mino lance"
+        },
+        {
+            "Count": 5,
+            "Name": "a mino shield"
+        },
+        {
+            "Count": 1,
+            "Name": "an execowtioner axe"
+        },
+        {
+            "Count": 2,
+            "Name": "a glooth club"
+        },
+        {
+            "Count": 3,
+            "Name": "a glooth axe"
+        },
+        {
+            "Count": 27,
+            "Name": "a glob of glooth"
+        },
+        {
+            "Count": 1,
+            "Name": "a glooth amulet"
+        },
+        {
+            "Count": 14,
+            "Name": "a slime heart"
+        },
+        {
+            "Count": 11,
+            "Name": "a poisoned fang"
+        },
+        {
+            "Count": 10,
+            "Name": "a giant pacifier"
+        },
+        {
+            "Count": 12,
+            "Name": "a moohtant horn"
+        },
+        {
+            "Count": 7,
+            "Name": "an execowtioner mask"
+        },
+        {
+            "Count": 6,
+            "Name": "a cowbell"
+        },
+        {
+            "Count": 1,
+            "Name": "an onyx chip"
+        },
+        {
+            "Count": 21,
+            "Name": "a rubbish amulet"
+        }
+    ],
+    "Raw XP Gain": "1,232,307",
+    "Raw XP/h": "692,839",
+    "Session end": "2026-05-26, 23:15:13",
+    "Session length": "01:56h",
+    "Session start": "2026-05-26, 21:18:35",
+    "Supplies": "128,379",
+    "XP Gain": "1,988,682",
+    "XP/h": "1,022,944"
+}

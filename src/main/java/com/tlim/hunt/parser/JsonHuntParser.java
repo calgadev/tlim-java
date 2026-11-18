@@ -17,7 +17,7 @@ public class JsonHuntParser {
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd, HH:mm:ss");
 
     // Anchored at start, fixed alternatives only — no quantified groups, no backtracking risk
-    private static final Pattern ARTICLE_PATTERN = Pattern.compile("^(a|an) ");
+    private static final Pattern ARTICLE_PATTERN = Pattern.compile("^(a|an) ", Pattern.CASE_INSENSITIVE);
 
     private final ObjectMapper objectMapper;
 
@@ -48,8 +48,8 @@ public class JsonHuntParser {
             JsonNode lootedItems = root.get("Looted Items");
             if (lootedItems != null && lootedItems.isArray()) {
                 for (JsonNode entry : lootedItems) {
-                    String name = ARTICLE_PATTERN.matcher(entry.get("Name").asText()).replaceFirst("");
-                    int count = entry.get("Count").asInt();
+                    String name = ARTICLE_PATTERN.matcher(entry.get("Name").asText().strip()).replaceFirst("");
+                    int count = parseIntNode(entry.get("Count"));
                     items.add(new ParsedItem(name, count));
                 }
             }
@@ -58,8 +58,8 @@ public class JsonHuntParser {
             JsonNode killedMonsters = root.get("Killed Monsters");
             if (killedMonsters != null && killedMonsters.isArray()) {
                 for (JsonNode entry : killedMonsters) {
-                    String name = entry.get("Name").asText();
-                    int count = entry.get("Count").asInt();
+                    String name = entry.get("Name").asText().strip();
+                    int count = parseIntNode(entry.get("Count"));
                     monsters.add(new ParsedMonster(name, count));
                 }
             }

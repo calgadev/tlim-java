@@ -1,0 +1,44 @@
+{
+    "Balance": "-3,064",
+    "Damage": "31,183",
+    "Damage/h": "31,183",
+    "Healing": "6,401",
+    "Healing/h": "6,401",
+    "Killed Monsters": [
+        {
+            "Count": 20,
+            "Name": "bog raider"
+        },
+        {
+            "Count": 12,
+            "Name": "carrion worm"
+        },
+        {
+            "Count": 21,
+            "Name": "rotworm"
+        }
+    ],
+    "Loot": "1,479",
+    "Looted Items": [
+        {
+            "Count": 725,
+            "Name": "a gold coin"
+        },
+        {
+            "Count": 1,
+            "Name": "a great spirit potion"
+        },
+        {
+            "Count": 1,
+            "Name": "a belted cape"
+        }
+    ],
+    "Raw XP Gain": "17,701",
+    "Raw XP/h": "99,113",
+    "Session end": "2026-01-23, 18:24:04",
+    "Session length": "00:10h",
+    "Session start": "2026-01-23, 18:13:14",
+    "Supplies": "4,543",
+    "XP Gain": "26,551",
+    "XP/h": "148,666"
+}

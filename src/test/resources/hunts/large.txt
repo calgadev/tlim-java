@@ -1,0 +1,92 @@
+Session data: From 2026-08-08, 17:13:53 to 2026-08-08, 21:52:01
+Session: 04:38h
+Raw XP Gain: 704,643
+XP Gain: 772,668
+Raw XP/h: 152,000
+XP/h: 166,674
+Loot: 854,932
+Supplies: 183,852
+Balance: 671,080
+Damage: 1,165,883
+Damage/h: 257,140
+Healing: 823
+Healing/h: 181
+Killed Monsters:
+  34x bat
+  7x bear
+  36x bug
+  63x centipede
+  138x chicken
+  8x cobra
+  589x corym charlatan
+  799x corym skirmisher
+  597x corym vanguard
+  24x crab
+  8x crocodile
+  2x deer
+  9x desperate white deer
+  7x dworc fleshhunter
+  5x dworc venomsniper
+  2x dworc voodoomaster
+  2x elf scout
+  115x emerald damselfly
+  1x enraged white deer
+  35x feverish citizen
+  3x flamingo
+  177x fox
+  14x leaf golem
+  5x lizard commander
+  6x lizard executioner
+  10x lizard henchman
+  4x lizard magician
+  77x lizard sentinel
+  26x lizard snakecharmer
+  9x lizard swordmaster
+  54x lizard templar
+  218x marsh stalker
+  274x panda
+  66x poison spider
+  50x rabbit
+  1x salamander
+  7x sheep
+  75x snake
+  152x spider
+  5x spit nettle
+  9x squirrel
+  3x swampling
+  2x tarantula
+  267x terror bird
+  1x tiger
+  8x wasp
+  44x wolf
+  8x wyvern
+Looted Items:
+  1x seeds
+  31401x a gold coin
+  35x a worm
+  35x meat
+  11x a fish
+  4x ham
+  14x cheese
+  5x a chicken feather
+  1x a bamboo stick
+  3x a ludicrous piece of cloth
+  1x a luminous piece of cloth
+  8x a damselfly wing
+  1x a marsh stalker beak
+  9x a marsh stalker feather
+  3x a damselfly eye
+  115x a bola
+  2x a spike shield
+  1x a ratana
+  4x a life preserver
+  128x a cheese cutter
+  15x a cheesy figurine
+  124x an earflap
+  11x soft cheese
+  13x rat cheese
+  12x a leather harness
+  12x a spiky club
+  1x a simple jo staff
+  1x a proficiency catalyst
+  1x a basic bash scroll

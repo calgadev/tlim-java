@@ -15,6 +15,10 @@ public class Creature {
     @Column(nullable = false, unique = true, length = 255)
     private String name;
 
+    // In-game lowercase name (TibiaWiki "actualname"), as written by the Hunt Analyser
+    @Column(name = "actual_name", length = 255)
+    private String actualName;
+
     @Column(name = "wiki_url", length = 500)
     private String wikiUrl;
 
@@ -71,6 +75,9 @@ public class Creature {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public String getActualName() { return actualName; }
+    public void setActualName(String actualName) { this.actualName = actualName; }
 
     public String getWikiUrl() { return wikiUrl; }
     public void setWikiUrl(String wikiUrl) { this.wikiUrl = wikiUrl; }
