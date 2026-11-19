@@ -146,6 +146,8 @@ The application reads all sensitive configuration from environment variables. No
 | `DB_USERNAME` | PostgreSQL username |
 | `DB_PASSWORD` | PostgreSQL password |
 | `JWT_SECRET` | Secret key used to sign JWT tokens |
+| `CORS_ALLOWED_ORIGINS` | *Optional.* Comma-separated browser origins allowed to call the API. Default: `http://localhost:5173` (the Vite dev server of [tlim-frontend](https://github.com/calgadev/tlim-frontend)) |
+| `TLIM_ADMIN_USERNAME` / `TLIM_ADMIN_PASSWORD` | *Optional.* When both are set, this admin account is created on startup (or an existing user with that name is promoted to `ADMIN`). The password must have at least 8 characters |
 
 Copy `.env.example` to `.env` and fill in the values before running locally.
 
@@ -230,12 +232,25 @@ Protected endpoints require a Bearer JWT token. Use `POST /api/auth/register` to
 
 ---
 
+## Error Responses
+
+Every error, including those raised by Spring Security (missing/invalid token, forbidden route) and unknown routes, uses the same JSON body:
+
+```json
+{ "status": 404, "error": "Not Found", "message": "Character not found: 5" }
+```
+
+Validation errors report the first failing field in `message`.
+
+---
+
 ## Search and Filter Query Params
 
 | Endpoint | Parameter | Behaviour |
 |---|---|---|
 | `GET /api/items` | `?name=rotworm` | Returns items whose name contains the value (case-insensitive). Absent or blank falls through to all items. |
 | `GET /api/items` | `?category=weapon` | Returns items in that category. Takes precedence over `?name=` when both are supplied. |
+| `GET /api/items` | `?limit=20` | Caps the result at that many items, sorted by name. Useful for autocomplete. Absent returns the full list, as before; `0` or negative returns 400. |
 | `GET /api/hunt-sessions/characters/{id}` | `?location=Drefia` | Returns sessions whose location contains the value (case-insensitive). Absent or blank returns all sessions for the character. Always ordered by session start, most recent first. |
 | `GET /api/inventory/characters/{id}/decisions` | `?decision=SELL_NPC` | Only returns items with that decision (`KEEP`, `SELL_NPC`, `SELL_MARKET`, `NO_PRICE`). `passiveGold` and `grossValue` still cover the whole inventory. |
 | `GET /api/inventory/characters/{id}/decisions` | `?sortBy=value` | `value` (estimated value, highest first) or `name`. Default: items needing action first (`SELL_NPC` → `SELL_MARKET` → `NO_PRICE` → `KEEP`). |
@@ -357,13 +372,17 @@ A 201 response with non-empty skip lists means the session was saved successfull
 - [x] Search and filter query params — `?name=` on items, `?location=` on hunt sessions
 - [ ] Deploy
 
-### Stage 3 — React frontend *(planned)*
+### Stage 3 — React frontend *(in progress)*
+
+Developed in [tlim-frontend](https://github.com/calgadev/tlim-frontend).
 
 ---
 
 ## Creating the First Admin User
 
-There is no registration endpoint that creates admin users. The first admin must be inserted directly into the database with a BCrypt-hashed password:
+There is no registration endpoint that creates admin users. The simplest way is to set `TLIM_ADMIN_USERNAME` and `TLIM_ADMIN_PASSWORD` (see [Environment Variables](#environment-variables)): the account is created on the next startup, or promoted to `ADMIN` if a user with that name already exists. Its password is never changed afterwards.
+
+Alternatively, insert the admin directly into the database with a BCrypt-hashed password:
 
 ```sql
 INSERT INTO users (username, password_hash, role)
