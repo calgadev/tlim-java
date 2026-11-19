@@ -13,6 +13,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
@@ -23,6 +24,9 @@ public class WikiApiClient {
     private static final Logger log = LoggerFactory.getLogger(WikiApiClient.class);
     // Hardcoded to prevent SSRF — must never be user-configurable
     private static final String BASE_URL = "https://tibia.fandom.com/api.php";
+    // Without timeouts a request the server never answers blocks the whole scrape forever
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(15);
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(60);
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
@@ -30,7 +34,9 @@ public class WikiApiClient {
 
     public WikiApiClient(ScraperProperties scraperProperties) {
         this.scraperProperties = scraperProperties;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(CONNECT_TIMEOUT)
+                .build();
         this.objectMapper = new ObjectMapper();
     }
 
@@ -58,6 +64,7 @@ public class WikiApiClient {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Accept", "application/json")
+                .timeout(REQUEST_TIMEOUT)
                 .GET()
                 .build();
 

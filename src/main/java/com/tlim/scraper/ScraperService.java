@@ -25,20 +25,29 @@ public class ScraperService {
         return serverScraper.scrapeAll();
     }
 
+    /** Which part of the TibiaWiki crawl to run. Creature loot links to items, so ALL runs items first. */
+    public enum Scope { ALL, ITEMS, CREATURES }
+
     public ScraperResult runFullScrape() {
+        return runScrape(Scope.ALL);
+    }
+
+    public ScraperResult runScrape(Scope scope) {
         Instant start = Instant.now();
 
         // Servers come from a different source; a failure there must not cancel the wiki crawl
         ServerScrapeResult servers = null;
-        try {
-            servers = serverScraper.scrapeAll();
-        } catch (RuntimeException e) {
-            log.warn("World list scrape failed: {}", e.getMessage());
+        if (scope == Scope.ALL) {
+            try {
+                servers = serverScraper.scrapeAll();
+            } catch (RuntimeException e) {
+                log.warn("World list scrape failed: {}", e.getMessage());
+            }
         }
 
-        // Items before creatures — creature loot links to existing items
-        int[] itemCounts = itemScraper.scrapeAll();
-        int[] creatureCounts = creatureScraper.scrapeAll();
+        int[] none = {0, 0};
+        int[] itemCounts = scope == Scope.CREATURES ? none : itemScraper.scrapeAll();
+        int[] creatureCounts = scope == Scope.ITEMS ? none : creatureScraper.scrapeAll();
 
         long durationSeconds = Instant.now().getEpochSecond() - start.getEpochSecond();
 

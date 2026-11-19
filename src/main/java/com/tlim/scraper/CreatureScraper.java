@@ -17,11 +17,19 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 @Component
 public class CreatureScraper {
 
     private static final Logger log = LoggerFactory.getLogger(CreatureScraper.class);
+
+    /** Subcategories of Category:Creatures whose pages are not creature pages. */
+    private static final Set<String> NON_CREATURE_CATEGORIES = Set.of("Category:Loot Statistics");
+
+    /** Loot quantity as written on TibiaWiki: "3", "1-4", "1-?", "1-4+", "1+", "0-120?" (uncertain), "?". */
+    private static final Pattern AMOUNT = Pattern.compile("\\?|\\d+[+?]?(\\s*-\\s*(\\d+[+?]?|\\?))?");
 
     private final WikiApiClient wikiApiClient;
     private final CreatureRepository creatureRepository;
@@ -47,6 +55,8 @@ public class CreatureScraper {
         // Level 2: page titles within each category, deduplicated
         LinkedHashSet<String> creatureTitles = new LinkedHashSet<>();
         for (String category : categories) {
+            // "Category:Loot Statistics" lists ~1,450 drop-statistics pages, none with an Infobox Creature
+            if (NON_CREATURE_CATEGORIES.contains(category)) continue;
             creatureTitles.addAll(fetchCategoryMembers(category, "page"));
         }
         log.info("Found {} unique creature pages", creatureTitles.size());
@@ -207,7 +217,7 @@ public class CreatureScraper {
         return null;
     }
 
-    private List<LootEntry> parseLootEntries(String lootBlock) {
+    static List<LootEntry> parseLootEntries(String lootBlock) {
         List<LootEntry> entries = new ArrayList<>();
         String lower = lootBlock.toLowerCase();
         int pos = 0;
@@ -227,7 +237,7 @@ public class CreatureScraper {
                 String amountStr;
                 String itemName;
                 String rarity;
-                if (candidate.matches("\\d+(-\\d+)?")) {
+                if (AMOUNT.matcher(candidate).matches()) {
                     amountStr = candidate;
                     itemName = parts[2].trim();
                     rarity = (parts.length >= 4 && !parts[3].trim().isEmpty()) ? parts[3].trim() : null;
@@ -250,7 +260,7 @@ public class CreatureScraper {
         return extractBlockFrom(wikitext, startIdx);
     }
 
-    private String extractBlockFrom(String wikitext, int startIdx) {
+    private static String extractBlockFrom(String wikitext, int startIdx) {
         int depth = 0;
         int pos = startIdx;
         while (pos < wikitext.length() - 1) {
@@ -325,20 +335,21 @@ public class CreatureScraper {
         }
     }
 
-    private int[] parseAmountRange(String amount) {
-        if (amount == null || amount.isBlank() || amount.trim().equals("?")) return new int[]{1, 1};
-        String trimmed = amount.trim();
-        if (trimmed.contains("-")) {
-            String[] parts = trimmed.split("-", 2);
-            try {
-                return new int[]{Integer.parseInt(parts[0].trim()), Integer.parseInt(parts[1].trim())};
-            } catch (NumberFormatException e) {
-                return new int[]{1, 1};
-            }
-        }
+    /**
+     * Parses a TibiaWiki loot amount: "3", "1-4", open-ended forms such as "1-?", "1-4+", "1+", "?",
+     * and uncertain bounds such as "0-120?" (the trailing "?" is dropped).
+     * An unknown upper bound is stored as the highest known number (both columns are NOT NULL).
+     */
+    static int[] parseAmountRange(String amount) {
+        if (amount == null) return new int[]{1, 1};
+        // "+" and a "?" right after a digit only qualify the number; a lone "?" is an unknown bound
+        String trimmed = amount.replace(" ", "").replace("+", "").replaceAll("(\\d)\\?", "$1");
+        if (trimmed.isEmpty() || trimmed.equals("?")) return new int[]{1, 1};
+        String[] parts = trimmed.split("-", 2);
         try {
-            int val = Integer.parseInt(trimmed);
-            return new int[]{val, val};
+            int min = Integer.parseInt(parts[0]);
+            int max = (parts.length < 2 || parts[1].equals("?")) ? min : Integer.parseInt(parts[1]);
+            return new int[]{min, Math.max(min, max)};
         } catch (NumberFormatException e) {
             return new int[]{1, 1};
         }
@@ -349,5 +360,5 @@ public class CreatureScraper {
         return value.trim();
     }
 
-    private record LootEntry(String itemName, String rarity, int minAmount, int maxAmount) {}
+    record LootEntry(String itemName, String rarity, int minAmount, int maxAmount) {}
 }
