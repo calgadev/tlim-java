@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,18 +37,30 @@ public class ItemController {
         return itemService.createItem(request);
     }
 
-    @Operation(summary = "List all items, optionally filtered by category or name")
+    @Operation(summary = "List all items, optionally filtered by category or name and capped by limit")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Item list returned"),
+        @ApiResponse(responseCode = "400", description = "limit is not a positive number"),
         @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
     })
     @GetMapping
     public List<ItemResponse> getItems(@RequestParam(required = false) String category,
-                                       @RequestParam(required = false) String name) {
-        if (category != null && !category.isBlank()) {
-            return itemService.getItemsByCategory(category);
+                                       @RequestParam(required = false) String name,
+                                       @RequestParam(required = false) Integer limit) {
+        if (limit != null && limit < 1) {
+            throw new IllegalArgumentException("limit must be a positive number");
         }
-        return itemService.getAllItems(Optional.ofNullable(name));
+        List<ItemResponse> items = (category != null && !category.isBlank())
+                ? itemService.getItemsByCategory(category)
+                : itemService.getAllItems(Optional.ofNullable(name));
+        // Without limit the full list is returned, as before; with it, results are sorted by name first
+        if (limit == null) {
+            return items;
+        }
+        return items.stream()
+                .sorted(Comparator.comparing(ItemResponse::name, String.CASE_INSENSITIVE_ORDER))
+                .limit(limit)
+                .toList();
     }
 
     @Operation(summary = "Get an item by ID")
