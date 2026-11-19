@@ -12,9 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,14 +39,25 @@ public class AdminController {
     }
 
     @PostMapping("/scrape")
-    @Operation(summary = "Trigger a full scrape asynchronously: world list, then TibiaWiki items and creatures")
+    @Operation(summary = "Trigger a scrape asynchronously. scope=all (default): world list, then TibiaWiki items "
+            + "and creatures; scope=items or scope=creatures re-runs only that part (creatures need items already scraped)")
     @ApiResponses({
         @ApiResponse(responseCode = "202", description = "Scrape started"),
+        @ApiResponse(responseCode = "400", description = "Unknown scope"),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden — ADMIN role required"),
         @ApiResponse(responseCode = "409", description = "Scrape already running")
     })
-    public ResponseEntity<Object> startScrape() {
+    public ResponseEntity<Object> startScrape(@RequestParam(defaultValue = "all") String scope) {
+        ScraperService.Scope parsedScope;
+        try {
+            parsedScope = ScraperService.Scope.valueOf(scope.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("status", 400, "error", "Bad Request",
+                        "message", "scope must be one of: all, items, creatures"));
+        }
+
         if (!isScraping.compareAndSet(false, true)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("status", 409, "error", "Conflict", "message", "Scrape already running"));
@@ -54,7 +67,7 @@ public class AdminController {
         lastStatus = new ScrapeStatusResponse("RUNNING", startedAt, null, null);
 
         // supplyAsync to capture the ScraperResult; whenComplete runs on both success and failure
-        CompletableFuture.supplyAsync(scraperService::runFullScrape)
+        CompletableFuture.supplyAsync(() -> scraperService.runScrape(parsedScope))
             .whenComplete((result, ex) -> {
                 // Guaranteed to run even if runFullScrape throws — prevents permanent isScraping lock
                 isScraping.set(false);
