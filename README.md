@@ -6,7 +6,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL_15-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Complete-success?style=for-the-badge)
 
-> A complete rewrite of [TLIM Stage 1](https://github.com/calgadev/tlim-python2) — originally built in Python/FastAPI/SQLite — now rebuilt as a production-grade REST API. A React frontend is planned for Stage 3.
+> A complete rewrite of [TLIM Stage 1](https://github.com/calgadev/tlim-python2) — originally built in Python/FastAPI/SQLite — now rebuilt as a production-grade REST API. Its web interface is the Stage 3 [React frontend](https://github.com/calgadev/tlim-frontend).
 
 ---
 
@@ -25,9 +25,9 @@ Stage 1 proved the concept with a working Python/FastAPI MVP. Stage 2 rebuilds t
 
 | Stage | Stack | Repository | Status |
 |---|---|---|---|
-| Stage 1 — Backend + Server-side UI | Python 3.12 · FastAPI · SQLAlchemy 2.0 · SQLite · Jinja2 | tlim-python2 | ✅ Complete |
-| Stage 2 — Backend rewrite | Java 17 · Spring Boot · Spring Data JPA · PostgreSQL · Maven | tlim-java | ✅ Complete |
-| Stage 3 — Modern frontend | React · JavaScript ES6+ · React Router · Axios | tlim-frontend (coming soon) | 🚧 In Progress |
+| Stage 1 — Backend + Server-side UI | Python 3.12 · FastAPI · SQLAlchemy 2.0 · SQLite · Jinja2 | [tlim-python2](https://github.com/calgadev/tlim-python2) | ✅ Complete |
+| Stage 2 — REST API rewrite | Java 17 · Spring Boot 3.5 · Spring Data JPA · PostgreSQL · Flyway | [tlim-java](https://github.com/calgadev/tlim-java) *(current)* | ✅ Complete (deploy pending) |
+| Stage 3 — React frontend | React 19 · TypeScript · Vite · TanStack Query · Tailwind CSS | [tlim-frontend](https://github.com/calgadev/tlim-frontend) | ✅ Complete (deploy pending) |
 
 The project is intentionally developed in three stages with different stacks to demonstrate that the same problem can be solved across different languages and technologies — showing transferable knowledge rather than familiarity with a single tool.
 
@@ -77,12 +77,12 @@ src/
 ├── main/
 │   ├── java/com/tlim/
 │   │   ├── TlimApplication.java        ← Spring Boot entry point
-│   │   ├── admin/                      ← Scraper trigger and status endpoints (ADMIN role)
+│   │   ├── admin/                      ← Scraper trigger/status and world list import (ADMIN role)
 │   │   ├── auth/                       ← JWT authentication, security filter chain, UserDetails
 │   │   │   └── dto/                    ← Register, login, and token response DTOs
 │   │   ├── character/                  ← Character CRUD, vocation enum, user-scoped queries
 │   │   │   └── dto/
-│   │   ├── config/                     ← Security config, OpenAPI/Swagger config, global exception handler
+│   │   ├── config/                     ← Security (JWT filter, CORS, JSON 401/403), OpenAPI, global exception handler
 │   │   ├── creature/                   ← Creature CRUD with loot eager-loading
 │   │   │   └── dto/
 │   │   ├── hunt/                       ← Hunt session CRUD, import service, text and JSON parsers
@@ -94,27 +94,28 @@ src/
 │   │   │   └── dto/
 │   │   ├── scraper/                    ← Three-level TibiaWiki MediaWiki API crawl
 │   │   │   └── dto/
-│   │   ├── server/                     ← Server CRUD, PVP type enum
+│   │   ├── server/                     ← Server CRUD, PVP type enum, official world list sync (TibiaData)
 │   │   │   └── dto/
-│   │   └── user/                       ← User entity and repository
+│   │   └── user/                       ← User entity, repository, admin account bootstrap
 │   └── resources/
 │       ├── application.properties      ← All credentials read from environment variables
 │       ├── application-prod.properties
 │       └── db/migration/               ← Flyway versioned migrations (V1–V14)
 └── test/
     └── java/com/tlim/
-        ├── config/                     ← Security rules (WebMvc slice test)
+        ├── config/                     ← Security rules, CORS and error bodies (WebMvc slice tests)
         ├── hunt/                       ← Hunt import and deletion service tests
         │   └── parser/                 ← Text and JSON parsers against real Hunt Analyser exports
         ├── inventory/                  ← Sale decision engine tests
-        └── scraper/                    ← TibiaWiki "sellto" parsing tests
+        ├── scraper/                    ← TibiaWiki parsing and world list tests
+        └── user/                       ← Admin bootstrap tests
 ```
 
 ---
 
 ## Key Technical Decisions
 
-**Stateless JWT over session-based auth** — Spring Security is configured as `STATELESS`, meaning no `HttpSession` is ever created. The Bearer token carries identity on every request, which fits a REST API that will serve a React frontend in Stage 3.
+**Stateless JWT over session-based auth** — Spring Security is configured as `STATELESS`, meaning no `HttpSession` is ever created. The Bearer token carries identity on every request, which fits a REST API consumed by the Stage 3 React frontend. Browser access is limited to the origins in `CORS_ALLOWED_ORIGINS`.
 
 **`marketPrice` as nullable `Integer`, not primitive `int`** — `NULL` means "price not yet registered", which is semantically distinct from `0` (a known worthless price). Using a primitive would collapse both states into zero.
 
@@ -163,13 +164,16 @@ cd tlim-java
 # 2. Copy and fill in environment variables
 cp .env.example .env
 
-# 3. Build and run
+# 3. Load the variables and run (Spring Boot does not read .env by itself)
+set -a && . ./.env && set +a
 ./mvnw spring-boot:run
 ```
 
 Flyway will run all migrations automatically on first start. The API will be available at `http://localhost:8080`.
 
-Run the tests with `./mvnw test`. They are unit and web-slice tests and do not need a database.
+Run the tests with `./mvnw test`. They are unit and web-slice tests and do not need a database. GitHub Actions runs them on every pull request and push to `main`.
+
+For the web interface, start [tlim-frontend](https://github.com/calgadev/tlim-frontend) (`npm run dev` on port 5173); its dev server proxies `/api` to this backend.
 
 Swagger UI: `http://localhost:8080/swagger-ui.html`
 
@@ -330,7 +334,7 @@ A 201 response with non-empty skip lists means the session was saved successfull
 
 ## What is NOT in scope for Stage 2
 
-- React frontend (Stage 3)
+- Web interface (it lives in [tlim-frontend](https://github.com/calgadev/tlim-frontend), Stage 3)
 - Email, OAuth, or any auth mechanism beyond username + password JWT
 - Role-based access control beyond USER / ADMIN
 - Tibia.com API integration
@@ -339,7 +343,7 @@ A 201 response with non-empty skip lists means the session was saved successfull
 
 ---
 
-## Project Roadmap
+## Stage Checklists
 
 ### Stage 1 — Python / FastAPI / SQLite
 - [x] Project structure and virtual environment
@@ -355,26 +359,35 @@ A 201 response with non-empty skip lists means the session was saved successfull
 - [x] Market price management per server
 
 ### Stage 2 — Java / Spring Boot / PostgreSQL *(current)*
-- [x] Project initialization and base configuration
-- [x] Full domain model and Flyway migrations (V1–V12)
+- [x] Full domain model and Flyway migrations (V1–V14)
 - [x] JWT authentication (register, login, stateless Bearer token, security filter chain)
 - [x] Swagger UI with JWT bearer auth scheme
-- [x] Server CRUD API (`/api/servers`)
+- [x] Official world list imported from the TibiaData API, with inactive worlds kept and flagged (`/api/servers`)
 - [x] Character CRUD API with user-scoped queries (`/api/characters`)
-- [x] Item CRUD API with category filter (`/api/items`)
-- [x] Creature CRUD API with loot eager-loading (`/api/creatures`)
-- [x] Inventory API (`/api/inventory`)
-- [x] Hunt Sessions API (`/api/hunt-sessions`)
-- [x] Hunt Analyser import — text and JSON formats (`/api/hunt-sessions/import`)
-- [x] Server Item Prices API — per-server market price upsert and list (`/api/servers/{serverId}/item-prices`)
-- [x] Sale Decision Engine — per-character sell recommendations (`GET /api/inventory/characters/{id}/decisions`)
+- [x] Item API with name/category search and `?limit=` (`/api/items`)
+- [x] Creature API with loot tables (`/api/creatures`)
+- [x] Inventory API with stock goals (`/api/inventory`)
+- [x] Hunt Sessions API with location filter (`/api/hunt-sessions`)
+- [x] Hunt Analyser import — text and JSON — that adds the loot to the inventory (deleting the hunt reverts it)
+- [x] Server Item Prices API — per-server market prices (`/api/servers/{serverId}/item-prices`)
+- [x] Sale Decision Engine — per-character recommendations using the character's server prices
 - [x] Admin API + TibiaWiki scraper (`/api/admin`)
-- [x] Search and filter query params — `?name=` on items, `?location=` on hunt sessions
+- [x] Browser support for the frontend: CORS, uniform JSON error bodies, admin account from environment variables
+- [x] Unit and web-slice tests, GitHub Actions CI
 - [ ] Deploy
 
-### Stage 3 — React frontend *(in progress)*
-
+### Stage 3 — React / TypeScript / Vite
 Developed in [tlim-frontend](https://github.com/calgadev/tlim-frontend).
+
+- [x] Typed API layer and TanStack Query hooks synced with the Stage 2 DTOs
+- [x] JWT login/register with expiry handling and route guards (USER / ADMIN)
+- [x] Characters with an active-character switcher
+- [x] Inventory with goals, and the sale decision view with filters and totals
+- [x] Hunt Analyser import (text or JSON), hunt history and detail
+- [x] Wiki for items and creatures (TibiaWiki data)
+- [x] Market prices per world, world list, admin scraper panel
+- [x] Vitest + Testing Library tests, route-level code splitting, GitHub Actions CI
+- [ ] Deploy
 
 ---
 
@@ -436,6 +449,10 @@ DB_URL=jdbc:postgresql://localhost:5432/tlim
 DB_USERNAME=your_db_user
 DB_PASSWORD=your_db_password
 JWT_SECRET=your_jwt_secret
+# Optional: the origin that serves tlim-frontend, and the first admin account
+CORS_ALLOWED_ORIGINS=https://tlim.example.com
+TLIM_ADMIN_USERNAME=admin
+TLIM_ADMIN_PASSWORD=change-me-please
 ```
 
 **2. Install and enable the service**
@@ -462,7 +479,7 @@ The service restarts automatically on failure with a 10-second delay.
 
 O TLIM nasceu de duas dores reais de um jogador de Tibia: saber o que fazer com o loot após uma hunt, e ter histórico estruturado de sessões para comparar onde vale mais a pena caçar.
 
-Este projeto é a segunda etapa de um portfólio desenvolvido em três stacks diferentes — Python/FastAPI/SQLite, Java/Spring Boot/PostgreSQL e React. O Stage 2 reescreve a base do Stage 1 como uma API REST de nível produção, adicionando autenticação JWT, um scraper do TibiaWiki e documentação completa via Swagger UI. A ideia central é mostrar que o mesmo problema pode ser resolvido com ferramentas diferentes, evidenciando raciocínio transferível em vez de familiaridade com uma única tecnologia.
+Este projeto é a segunda etapa de um portfólio desenvolvido em três stacks diferentes — Python/FastAPI/SQLite, Java/Spring Boot/PostgreSQL e React/TypeScript. O Stage 2 reescreve a base do Stage 1 como uma API REST de nível produção, adicionando autenticação JWT, um scraper do TibiaWiki e documentação completa via Swagger UI. A ideia central é mostrar que o mesmo problema pode ser resolvido com ferramentas diferentes, evidenciando raciocínio transferível em vez de familiaridade com uma única tecnologia.
 
 Faz parte de uma transição de carreira de Analista de Sistemas para Desenvolvedor.
 
